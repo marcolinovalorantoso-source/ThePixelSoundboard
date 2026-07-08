@@ -208,9 +208,14 @@ namespace SoundBoard.Services
                         {
                             var devList = GetOutputDevices();
                             int idx = devList.FindIndex(d => d.Id == friendsDeviceId);
-                            if (idx >= 0)
+                            if (idx == 0) // "disabled"
                             {
-                                friendsDeviceNumber = idx;
+                                friendsDeviceNumber = -2;
+                                friendsDeviceName = "disabled";
+                            }
+                            else if (idx > 0)
+                            {
+                                friendsDeviceNumber = idx - 1; // Sottrae 1 perché l'elemento a indice 0 è "[Disattivato]"
                                 friendsDeviceName = devList[idx].Name;
                             }
                         }
@@ -229,9 +234,14 @@ namespace SoundBoard.Services
                             {
                                 var devList = GetOutputDevices();
                                 int idx = devList.FindIndex(d => d.Id == meDeviceId);
-                                if (idx >= 0)
+                                if (idx == 0) // "disabled"
                                 {
-                                    meDeviceNumber = idx;
+                                    meDeviceNumber = -2;
+                                    meDeviceName = "disabled";
+                                }
+                                else if (idx > 0)
+                                {
+                                    meDeviceNumber = idx - 1; // Sottrae 1 perché l'elemento a indice 0 è "[Disattivato]"
                                     meDeviceName = devList[idx].Name;
                                 }
                             }
@@ -258,24 +268,31 @@ namespace SoundBoard.Services
                         _resolvedFriendsDeviceName = friendsDeviceName ?? "";
                         _resolvedMeDeviceName = meDeviceName ?? "";
 
-                        // Apri il canale Amici con fallback automatico al device di default
-                        IWavePlayer waveOutFriends;
-                        try
+                        if (friendsDeviceNumber != -2)
                         {
-                            var wo = new WaveOutEvent { DeviceNumber = friendsDeviceNumber };
-                            wo.Init(_masterVolumeFriends);
-                            wo.Play();
-                            waveOutFriends = wo;
+                            // Apri il canale Amici con fallback automatico al device di default
+                            IWavePlayer waveOutFriends;
+                            try
+                            {
+                                var wo = new WaveOutEvent { DeviceNumber = friendsDeviceNumber };
+                                wo.Init(_masterVolumeFriends);
+                                wo.Play();
+                                waveOutFriends = wo;
+                            }
+                            catch
+                            {
+                                // Fallback: usa il dispositivo di default del sistema
+                                var wo = new WaveOutEvent { DeviceNumber = -1 };
+                                wo.Init(_masterVolumeFriends);
+                                wo.Play();
+                                waveOutFriends = wo;
+                            }
+                            _outputFriends = waveOutFriends;
                         }
-                        catch
+                        else
                         {
-                            // Fallback: usa il dispositivo di default del sistema
-                            var wo = new WaveOutEvent { DeviceNumber = -1 };
-                            wo.Init(_masterVolumeFriends);
-                            wo.Play();
-                            waveOutFriends = wo;
+                            _outputFriends = null;
                         }
-                        _outputFriends = waveOutFriends;
 
                         System.Threading.Thread.Sleep(200);
 
