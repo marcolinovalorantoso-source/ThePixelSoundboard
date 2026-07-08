@@ -51,77 +51,100 @@ namespace SoundBoard.Views
 
                 System.Threading.Tasks.Task.Run(() =>
                 {
-                    var devices = _viewModel.GetOutputDevices();
-                    var inputDevices = _viewModel.GetInputDevices();
-                    // Rileva driver rinominato OPPURE CABLE originale (prima del riavvio)
-                    var virtualDevice = devices.Find(d => d.Name.Contains("ThePixelSoundboard Audio") || d.Name.Contains("CABLE Input"));
-                    bool hasVirtualDriver = virtualDevice != null;
-                    bool isRenamed = virtualDevice?.Name.Contains("ThePixelSoundboard Audio") ?? false;
-
-                    Dispatcher.Invoke(() =>
+                    try
                     {
-                        OutputFriendsComboBox.ItemsSource = devices;
-                        OutputMeComboBox.ItemsSource = devices;
-                        InputMicComboBox.ItemsSource = inputDevices;
+                        var devices = _viewModel.GetOutputDevices() ?? new System.Collections.Generic.List<AudioOutputDevice>();
+                        var inputDevices = _viewModel.GetInputDevices() ?? new System.Collections.Generic.List<AudioInputDevice>();
+                        
+                        // Rileva driver rinominato OPPURE CABLE originale (prima del riavvio) in modo sicuro (evita eccezioni se Name è nullo)
+                        var virtualDevice = devices.Find(d => d.Name != null && (d.Name.Contains("ThePixelSoundboard Audio") || d.Name.Contains("CABLE Input")));
+                        bool hasVirtualDriver = virtualDevice != null;
+                        bool isRenamed = virtualDevice?.Name?.Contains("ThePixelSoundboard Audio") ?? false;
 
-                        // Applica lo stato della checkbox
-                        UseVirtualDriverCheckBox.IsChecked = _viewModel.UseVirtualDriver;
-
-                        if (hasVirtualDriver)
+                        Dispatcher.Invoke(() =>
                         {
-                            UseVirtualDriverCheckBox.IsEnabled = true;
-                            DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
-                                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1A3A1A"));
-                            DriverStatusIcon.Text = "✅";
-                            DriverStatusTitle.Text = "Driver Virtuale Rilevato";
-                            string micName = isRenamed ? "ThePixelSoundboard Mic" : "CABLE Output";
-                            DriverStatusSubtitle.Text = $"{micName} è installato e pronto.";
-                            DiscordMicNameRun.Text = micName;
+                            try
+                            {
+                                OutputFriendsComboBox.ItemsSource = devices;
+                                OutputMeComboBox.ItemsSource = devices;
+                                InputMicComboBox.ItemsSource = inputDevices;
 
-                            // Auto-seleziona il driver virtuale come output amici solo se non è già configurato
-                            if (virtualDevice != null && string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
-                                _viewModel.SelectedOutputFriendsDeviceId = virtualDevice.Id;
+                                // Applica lo stato della checkbox
+                                UseVirtualDriverCheckBox.IsChecked = _viewModel.UseVirtualDriver;
 
-                            // Seleziona il microfono dell'utente
-                            if (!string.IsNullOrEmpty(_viewModel.SelectedInputMicrophoneDeviceId))
-                                InputMicComboBox.SelectedValue = _viewModel.SelectedInputMicrophoneDeviceId;
-                            else if (inputDevices.Count > 0)
-                                InputMicComboBox.SelectedIndex = 0;
-                        }
-                        else
-                        {
-                            UseVirtualDriverCheckBox.IsEnabled = false;
-                            UseVirtualDriverCheckBox.IsChecked = false;
-                            _viewModel.UseVirtualDriver = false;
+                                if (hasVirtualDriver)
+                                {
+                                    UseVirtualDriverCheckBox.IsEnabled = true;
+                                    DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
+                                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1A3A1A"));
+                                    DriverStatusIcon.Text = "✅";
+                                    DriverStatusTitle.Text = "Driver Virtuale Rilevato";
+                                    string micName = isRenamed ? "ThePixelSoundboard Mic" : "CABLE Output";
+                                    DriverStatusSubtitle.Text = $"{micName} è installato e pronto.";
+                                    DiscordMicNameRun.Text = micName;
 
-                            DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
-                                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3A2A1A"));
-                            DriverStatusIcon.Text = "⚠️";
-                            DriverStatusTitle.Text = "Driver Virtuale non rilevato";
-                            DriverStatusSubtitle.Text = "Installa la versione completa per usare ThePixelSoundboard Mic su Discord";
+                                    // Auto-seleziona il driver virtuale come output amici solo se non è già configurato
+                                    if (virtualDevice != null && string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
+                                        _viewModel.SelectedOutputFriendsDeviceId = virtualDevice.Id;
 
-                            if (!string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
-                                OutputFriendsComboBox.SelectedValue = _viewModel.SelectedOutputFriendsDeviceId;
-                            else if (devices.Count > 0)
-                                OutputFriendsComboBox.SelectedIndex = 0;
-                        }
+                                    if (!string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
+                                        OutputFriendsComboBox.SelectedValue = _viewModel.SelectedOutputFriendsDeviceId;
+                                    else if (devices.Count > 0)
+                                        OutputFriendsComboBox.SelectedIndex = 0;
 
-                        // Aggiorna visibilità dei pannelli in base alla modalità selezionata
-                        UpdatePanelsVisibility(_viewModel.UseVirtualDriver);
+                                    // Seleziona il microfono dell'utente
+                                    if (!string.IsNullOrEmpty(_viewModel.SelectedInputMicrophoneDeviceId))
+                                        InputMicComboBox.SelectedValue = _viewModel.SelectedInputMicrophoneDeviceId;
+                                    else if (inputDevices.Count > 0)
+                                        InputMicComboBox.SelectedIndex = 0;
+                                }
+                                else
+                                {
+                                    UseVirtualDriverCheckBox.IsEnabled = false;
+                                    UseVirtualDriverCheckBox.IsChecked = false;
+                                    _viewModel.UseVirtualDriver = false;
 
-                        if (!string.IsNullOrEmpty(_viewModel.SelectedOutputMeDeviceId))
-                            OutputMeComboBox.SelectedValue = _viewModel.SelectedOutputMeDeviceId;
-                        else if (devices.Count > 1)
-                            OutputMeComboBox.SelectedIndex = 1;
-                        else if (devices.Count > 0)
-                            OutputMeComboBox.SelectedIndex = 0;
+                                    DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
+                                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3A2A1A"));
+                                    DriverStatusIcon.Text = "⚠️";
+                                    DriverStatusTitle.Text = "Driver Virtuale non rilevato";
+                                    DriverStatusSubtitle.Text = "Installa la versione completa per usare ThePixelSoundboard Mic su Discord";
 
-                        OutputFriendsComboBox.IsEnabled = true;
-                        OutputMeComboBox.IsEnabled = true;
-                        InputMicComboBox.IsEnabled = true;
+                                    if (!string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
+                                        OutputFriendsComboBox.SelectedValue = _viewModel.SelectedOutputFriendsDeviceId;
+                                    else if (devices.Count > 0)
+                                        OutputFriendsComboBox.SelectedIndex = 0;
+                                }
 
-                        Dispatcher.BeginInvoke(new System.Action(() => { _isInitializing = false; }), System.Windows.Threading.DispatcherPriority.Background);
-                    });
+                                // Aggiorna visibilità dei pannelli in base alla modalità selezionata
+                                UpdatePanelsVisibility(_viewModel.UseVirtualDriver);
+
+                                if (!string.IsNullOrEmpty(_viewModel.SelectedOutputMeDeviceId))
+                                    OutputMeComboBox.SelectedValue = _viewModel.SelectedOutputMeDeviceId;
+                                else if (devices.Count > 1)
+                                    OutputMeComboBox.SelectedIndex = 1;
+                                else if (devices.Count > 0)
+                                    OutputMeComboBox.SelectedIndex = 0;
+
+                                OutputFriendsComboBox.IsEnabled = true;
+                                OutputMeComboBox.IsEnabled = true;
+                                InputMicComboBox.IsEnabled = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Errore dispatcher: " + ex.Message);
+                            }
+                            finally
+                            {
+                                _isInitializing = false;
+                            }
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Errore background task: " + ex.Message);
+                        Dispatcher.Invoke(() => { _isInitializing = false; });
+                    }
                 });
             }
             catch

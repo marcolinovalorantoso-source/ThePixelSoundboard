@@ -541,7 +541,11 @@ namespace SoundBoard.ViewModels
                 var target = renamedTarget ?? genericTarget;
                 if (target != null)
                 {
-                    _settings.OutputFriendsDeviceId = target.Id;
+                    // Auto-imposta il driver virtuale come output amici solo se non è già configurato altro
+                    if (string.IsNullOrEmpty(_settings.OutputFriendsDeviceId))
+                    {
+                        _settings.OutputFriendsDeviceId = target.Id;
+                    }
                     
                     // Auto-attiva la modalità driver virtuale solo se rileviamo la versione rinominata (installazione con driver)
                     if (renamedTarget != null && !_settings.UseVirtualDriver && string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))

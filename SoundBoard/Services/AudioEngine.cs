@@ -26,6 +26,10 @@ namespace SoundBoard.Services
         private ISampleProvider? _micSampleProvider;
 
         private readonly Dictionary<string, ActiveSound> _activeSounds = new();
+        private string? _friendsDeviceId;
+        private string? _meDeviceId;
+        private string _resolvedFriendsDeviceName = "";
+        private string _resolvedMeDeviceName = "";
 
         public event Action<string>? SoundEnded;
 
@@ -48,17 +52,77 @@ namespace SoundBoard.Services
             public double VolumeBeforeMute = 1.0;
         }
 
+        private List<string> GetMMDeviceNames(NAudio.CoreAudioApi.DataFlow flow)
+        {
+            var names = new List<string>();
+            var task = System.Threading.Tasks.Task.Run(() =>
+            {
+                var list = new List<string>();
+                try
+                {
+                    var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
+                    var mmDevices = enumerator.EnumerateAudioEndPoints(flow, NAudio.CoreAudioApi.DeviceState.Active);
+                    foreach (var mm in mmDevices)
+                    {
+                        try { list.Add(mm.FriendlyName); } catch { }
+                    }
+                }
+                catch { }
+                return list;
+            });
+
+            if (task.Wait(1500)) // 1.5 seconds safety timeout
+            {
+                return task.Result;
+            }
+            return names; // Fallback to empty list (relying on waveOut/waveIn cap shortnames)
+        }
+
+        private string GetDefaultOutputDeviceName()
+        {
+            var task = System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
+                    var dev = enumerator.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+                    return dev?.FriendlyName ?? "";
+                }
+                catch { }
+                return "";
+            });
+
+            if (task.Wait(1000)) return task.Result;
+            return "";
+        }
+
+        private string GetDefaultInputDeviceName()
+        {
+            var task = System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
+                    var dev = enumerator.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Capture, NAudio.CoreAudioApi.Role.Multimedia);
+                    return dev?.FriendlyName ?? "";
+                }
+                catch { }
+                return "";
+            });
+
+            if (task.Wait(1000)) return task.Result;
+            return "";
+        }
+
         public List<AudioOutputDevice> GetOutputDevices()
         {
-            var result = new List<AudioOutputDevice>();
+            var result = new List<AudioOutputDevice>
+            {
+                new AudioOutputDevice("disabled", "[Disattivato - Nessun monitoraggio]")
+            };
             try
             {
-                // Use MMDeviceEnumerator (Core Audio) to get full device names (no 31-char limit)
-                var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
-                var mmDevices = enumerator.EnumerateAudioEndPoints(
-                    NAudio.CoreAudioApi.DataFlow.Render,
-                    NAudio.CoreAudioApi.DeviceState.Active);
-
+                var mmNames = GetMMDeviceNames(NAudio.CoreAudioApi.DataFlow.Render);
                 int waveOutCount = WaveOut.DeviceCount;
 
                 for (int i = 0; i < waveOutCount; i++)
@@ -66,22 +130,18 @@ namespace SoundBoard.Services
                     var caps = WaveOut.GetCapabilities(i);
                     string shortName = caps.ProductName; // max 31 chars
 
-                    // Find matching MMDevice by checking if its FriendlyName starts with the short name
                     string fullName = shortName;
-                    foreach (var mm in mmDevices)
+                    foreach (var name in mmNames)
                     {
-                        try
+                        if (name != null && name.StartsWith(shortName, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (mm.FriendlyName.StartsWith(shortName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                fullName = mm.FriendlyName;
-                                break;
-                            }
+                            fullName = name;
+                            break;
                         }
-                        catch { }
                     }
 
-                    result.Add(new AudioOutputDevice(i.ToString(), fullName));
+                    if (string.IsNullOrEmpty(fullName)) fullName = $"Output Dispositivo {i}";
+                    result.Add(new AudioOutputDevice(fullName, fullName));
                 }
             }
             catch { }
@@ -93,31 +153,26 @@ namespace SoundBoard.Services
             var result = new List<AudioInputDevice>();
             try
             {
-                var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
-                var mmDevices = enumerator.EnumerateAudioEndPoints(
-                    NAudio.CoreAudioApi.DataFlow.Capture,
-                    NAudio.CoreAudioApi.DeviceState.Active);
-
+                var mmNames = GetMMDeviceNames(NAudio.CoreAudioApi.DataFlow.Capture);
                 int waveInCount = WaveIn.DeviceCount;
+
                 for (int i = 0; i < waveInCount; i++)
                 {
                     var caps = WaveIn.GetCapabilities(i);
                     string shortName = caps.ProductName;
 
                     string fullName = shortName;
-                    foreach (var mm in mmDevices)
+                    foreach (var name in mmNames)
                     {
-                        try
+                        if (name != null && name.StartsWith(shortName, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (mm.FriendlyName.StartsWith(shortName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                fullName = mm.FriendlyName;
-                                break;
-                            }
+                            fullName = name;
+                            break;
                         }
-                        catch { }
                     }
-                    result.Add(new AudioInputDevice(i.ToString(), fullName));
+
+                    if (string.IsNullOrEmpty(fullName)) fullName = $"Input Dispositivo {i}";
+                    result.Add(new AudioInputDevice(fullName, fullName));
                 }
             }
             catch { }
@@ -128,6 +183,8 @@ namespace SoundBoard.Services
 
         public void Initialize(string? friendsDeviceId, string? meDeviceId, string? micDeviceId, double masterVolume)
         {
+            _friendsDeviceId = friendsDeviceId;
+            _meDeviceId = meDeviceId;
             System.Threading.Tasks.Task.Run(() =>
             {
                 lock (_initLock)
@@ -145,19 +202,61 @@ namespace SoundBoard.Services
                         _masterVolumeFriends = new VolumeSampleProvider(_mixerFriends) { Volume = (float)masterVolume };
                         _masterVolumeMe = new VolumeSampleProvider(_mixerMe) { Volume = (float)masterVolume };
 
+                        string friendsDeviceName = "";
                         int friendsDeviceNumber = -1; // -1 = default device
-                        if (friendsDeviceId != null && int.TryParse(friendsDeviceId, out int pf))
+                        if (!string.IsNullOrEmpty(friendsDeviceId))
                         {
-                            if (pf >= 0 && pf < WaveOut.DeviceCount)
-                                friendsDeviceNumber = pf;
+                            var devList = GetOutputDevices();
+                            int idx = devList.FindIndex(d => d.Id == friendsDeviceId);
+                            if (idx >= 0)
+                            {
+                                friendsDeviceNumber = idx;
+                                friendsDeviceName = devList[idx].Name;
+                            }
                         }
 
                         int meDeviceNumber = -1; // -1 = default device
-                        if (meDeviceId != null && int.TryParse(meDeviceId, out int pm))
+                        string meDeviceName = "";
+
+                        if (meDeviceId == "disabled")
                         {
-                            if (pm >= 0 && pm < WaveOut.DeviceCount)
-                                meDeviceNumber = pm;
+                            meDeviceNumber = -2; // -2 = disabled
+                            meDeviceName = "disabled";
                         }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(meDeviceId))
+                            {
+                                var devList = GetOutputDevices();
+                                int idx = devList.FindIndex(d => d.Id == meDeviceId);
+                                if (idx >= 0)
+                                {
+                                    meDeviceNumber = idx;
+                                    meDeviceName = devList[idx].Name;
+                                }
+                            }
+                            if (meDeviceNumber == -1)
+                            {
+                                meDeviceName = GetDefaultOutputDeviceName();
+                                if (string.IsNullOrEmpty(meDeviceName))
+                                {
+                                    try { meDeviceName = WaveOut.GetCapabilities(-1).ProductName; } catch { }
+                                }
+                            }
+                        }
+
+                        // Risolve il nome reale del default device per amici se -1
+                        if (friendsDeviceNumber == -1)
+                        {
+                            friendsDeviceName = GetDefaultOutputDeviceName();
+                            if (string.IsNullOrEmpty(friendsDeviceName))
+                            {
+                                try { friendsDeviceName = WaveOut.GetCapabilities(-1).ProductName; } catch { }
+                            }
+                        }
+
+                        _resolvedFriendsDeviceName = friendsDeviceName ?? "";
+                        _resolvedMeDeviceName = meDeviceName ?? "";
 
                         // Apri il canale Amici con fallback automatico al device di default
                         IWavePlayer waveOutFriends;
@@ -180,24 +279,31 @@ namespace SoundBoard.Services
 
                         System.Threading.Thread.Sleep(200);
 
-                        // Apri il canale Cuffie con fallback automatico al device di default
-                        IWavePlayer waveOutMe;
-                        try
+                        if (meDeviceNumber != -2)
                         {
-                            var wo = new WaveOutEvent { DeviceNumber = meDeviceNumber };
-                            wo.Init(_masterVolumeMe);
-                            wo.Play();
-                            waveOutMe = wo;
+                            // Apri il canale Cuffie con fallback automatico al device di default
+                            IWavePlayer waveOutMe;
+                            try
+                            {
+                                var wo = new WaveOutEvent { DeviceNumber = meDeviceNumber };
+                                wo.Init(_masterVolumeMe);
+                                wo.Play();
+                                waveOutMe = wo;
+                            }
+                            catch
+                            {
+                                // Fallback: usa il dispositivo di default del sistema
+                                var wo = new WaveOutEvent { DeviceNumber = -1 };
+                                wo.Init(_masterVolumeMe);
+                                wo.Play();
+                                waveOutMe = wo;
+                            }
+                            _outputMe = waveOutMe;
                         }
-                        catch
+                        else
                         {
-                            // Fallback: usa il dispositivo di default del sistema
-                            var wo = new WaveOutEvent { DeviceNumber = -1 };
-                            wo.Init(_masterVolumeMe);
-                            wo.Play();
-                            waveOutMe = wo;
+                            _outputMe = null;
                         }
-                        _outputMe = waveOutMe;
 
                         // Avvia il loopback del microfono solo se l'output amici è effettivamente un cavo virtuale
                         StopMicLoopback();
@@ -216,16 +322,22 @@ namespace SoundBoard.Services
                         }
                         catch { }
 
-                        if (isFriendsVirtual && micDeviceId != null && int.TryParse(micDeviceId, out int micIndex))
+                        int micIndex = -1;
+                        if (!string.IsNullOrEmpty(micDeviceId))
                         {
-                            if (micIndex >= 0 && micIndex < WaveIn.DeviceCount)
+                            var inputDevList = GetInputDevices();
+                            int idx = inputDevList.FindIndex(d => d.Id == micDeviceId);
+                            if (idx >= 0) micIndex = idx;
+                        }
+
+                        if (isFriendsVirtual && micIndex >= 0 && micIndex < WaveIn.DeviceCount)
+                        {
+                            _micInput = new WaveInEvent
                             {
-                                _micInput = new WaveInEvent
-                                {
-                                    DeviceNumber = micIndex,
-                                    WaveFormat = new WaveFormat(44100, 16, 1)
-                                };
-                                _micInput.BufferMilliseconds = 50;
+                                DeviceNumber = micIndex,
+                                WaveFormat = new WaveFormat(44100, 16, 1)
+                            };
+                            _micInput.BufferMilliseconds = 50;
 
                                 _micBuffer = new BufferedWaveProvider(_micInput.WaveFormat)
                                 {
@@ -244,7 +356,6 @@ namespace SoundBoard.Services
 
                                 _mixerFriends.AddMixerInput(_micSampleProvider);
                                 _micInput.StartRecording();
-                            }
                         }
                     }
                     catch (Exception ex)
@@ -361,6 +472,11 @@ namespace SoundBoard.Services
             ISampleProvider sampleMe = ConvertToMixFormat(readerMe.ToSampleProvider());
             var pauseMe = new PauseableSampleProvider(sampleMe);
             var volumeProviderMe = new VolumeSampleProvider(pauseMe) { Volume = (float)(volume * normalizationGain) };
+            bool playToMe = _meDeviceId != "disabled";
+            bool isSameDevice = playToMe &&
+                                !string.IsNullOrEmpty(_resolvedFriendsDeviceName) &&
+                                !string.IsNullOrEmpty(_resolvedMeDeviceName) &&
+                                _resolvedFriendsDeviceName.Equals(_resolvedMeDeviceName, StringComparison.OrdinalIgnoreCase);
 
             lock (_activeSounds)
             {
@@ -370,16 +486,24 @@ namespace SoundBoard.Services
                     VolumeFriends = volumeProviderFriends,
                     ReaderFriends = readerFriends,
                     PauseFriends = pauseFriends,
+                    FriendsEnded = isSameDevice, // Se è lo stesso dispositivo, consideriamo il canale amici già terminato per lo smaltimento
 
                     MixerInputMe = volumeProviderMe,
                     VolumeMe = volumeProviderMe,
                     ReaderMe = readerMe,
-                    PauseMe = pauseMe
+                    PauseMe = pauseMe,
+                    MeEnded = !playToMe // Se è disabilitato, lo consideriamo già terminato
                 };
             }
 
-            _mixerFriends.AddMixerInput(volumeProviderFriends);
-            _mixerMe.AddMixerInput(volumeProviderMe);
+            if (!isSameDevice)
+            {
+                _mixerFriends.AddMixerInput(volumeProviderFriends);
+            }
+            if (playToMe)
+            {
+                _mixerMe.AddMixerInput(volumeProviderMe);
+            }
         }
 
         public void Stop(string buttonId)
