@@ -477,6 +477,11 @@ namespace SoundBoard.ViewModels
                     {
                         _settings.UseVirtualDriver = true;
                     }
+                    else if (renamedTarget == null)
+                    {
+                        // Se il driver ufficiale non è installato/attivo, disattiva forzatamente la modalità driver
+                        _settings.UseVirtualDriver = false;
+                    }
                     
                     if (string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))
                     {
@@ -486,6 +491,11 @@ namespace SoundBoard.ViewModels
                             _settings.InputMicrophoneDeviceId = inputDevices[0].Id;
                         }
                     }
+                }
+                else
+                {
+                    // Nessun driver (né ufficiale né generico) rilevato
+                    _settings.UseVirtualDriver = false;
                 }
             }
             catch { }

@@ -196,9 +196,24 @@ namespace SoundBoard.Services
                         }
                         _outputMe = waveOutMe;
 
-                        // Avvia il loopback del microfono
+                        // Avvia il loopback del microfono solo se l'output amici è effettivamente un cavo virtuale
                         StopMicLoopback();
-                        if (micDeviceId != null && int.TryParse(micDeviceId, out int micIndex))
+
+                        bool isFriendsVirtual = false;
+                        try
+                        {
+                            var devices = GetOutputDevices();
+                            var fDev = devices.Find(d => d.Id == friendsDeviceId);
+                            if (fDev != null)
+                            {
+                                isFriendsVirtual = fDev.Name.Contains("ThePixelSoundboard Audio", StringComparison.OrdinalIgnoreCase) ||
+                                                   fDev.Name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase) ||
+                                                   fDev.Name.Contains("Virtual", StringComparison.OrdinalIgnoreCase);
+                            }
+                        }
+                        catch { }
+
+                        if (isFriendsVirtual && micDeviceId != null && int.TryParse(micDeviceId, out int micIndex))
                         {
                             if (micIndex >= 0 && micIndex < WaveIn.DeviceCount)
                             {
