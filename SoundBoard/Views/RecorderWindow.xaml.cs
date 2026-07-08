@@ -182,8 +182,9 @@ namespace SoundBoard.Views
 
             try
             {
-                // Salva permanentemente nella cartella Sounds
-                var destFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds");
+                // Salva permanentemente nella cartella Sounds in AppData per evitare errori di permessi
+                var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                var destFolder = Path.Combine(appDataFolder, "Sounds");
                 Directory.CreateDirectory(destFolder);
 
                 var destPath = Path.Combine(destFolder, $"rec_{Guid.NewGuid():N}.wav");

@@ -215,8 +215,9 @@ namespace SoundBoard.Views
                 {
                     var rate = (int)RateSlider.Value;
 
-                    // Salva il file permanentemente nella cartella Sounds
-                    var destFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds");
+                    // Salva il file permanentemente nella cartella Sounds in AppData per evitare errori di permessi
+                    var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                    var destFolder = Path.Combine(appDataFolder, "Sounds");
                     Directory.CreateDirectory(destFolder);
 
                     // Genera un nome file valido a partire dal testo (primi 20 caratteri)

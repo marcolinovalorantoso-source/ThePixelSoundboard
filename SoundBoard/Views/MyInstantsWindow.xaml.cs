@@ -244,8 +244,10 @@ namespace SoundBoard.Views
 
                 try
                 {
-                    // Cartella permanente per i suoni scaricati
-                    var destFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds");
+                    // Cartella permanente per i suoni scaricati in AppData per evitare errori di permessi
+                    var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                    var destFolder = Path.Combine(appDataFolder, "Sounds");
+                    Directory.CreateDirectory(destFolder);
                     var localPath = await _service.DownloadSoundAsync(item.RawItem, destFolder);
 
                     if (localPath != null && File.Exists(localPath))
