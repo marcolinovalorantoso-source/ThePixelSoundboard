@@ -34,14 +34,17 @@ namespace SoundBoard.Services
             public required ISampleProvider MixerInputFriends;
             public required VolumeSampleProvider VolumeFriends;
             public required WaveStream ReaderFriends;
+            public required PauseableSampleProvider PauseFriends;
             public bool FriendsEnded;
 
             public required ISampleProvider MixerInputMe;
             public required VolumeSampleProvider VolumeMe;
             public required WaveStream ReaderMe;
+            public required PauseableSampleProvider PauseMe;
             public bool MeEnded;
 
             public bool IsMuted;
+            public bool IsPaused;
             public double VolumeBeforeMute = 1.0;
         }
 
@@ -328,7 +331,7 @@ namespace SoundBoard.Services
             }
         }
 
-        public void Play(string buttonId, string filePath, double volume, bool normalize = false)
+        public void Play(string buttonId, string filePath, double volume, bool normalize = false, double normalizeDb = -1.0)
         {
             if (_mixerFriends == null || _mixerMe == null)
                 throw new InvalidOperationException("AudioEngine non inizializzato.");
@@ -344,16 +347,20 @@ namespace SoundBoard.Services
                 float peak = GetPeakVolume(readerFriends);
                 if (peak > 0.01f)
                 {
-                    normalizationGain = 0.95f / peak;
+                    // Converte decibel target in guadagno lineare (es: -1 dB = ~89% ampiezza max)
+                    float targetLinear = (float)Math.Pow(10.0, normalizeDb / 20.0);
+                    normalizationGain = targetLinear / peak;
                     if (normalizationGain > 4.0f) normalizationGain = 4.0f; // max boost limit
                 }
             }
 
             ISampleProvider sampleFriends = ConvertToMixFormat(readerFriends.ToSampleProvider());
-            var volumeProviderFriends = new VolumeSampleProvider(sampleFriends) { Volume = (float)(volume * normalizationGain) };
+            var pauseFriends = new PauseableSampleProvider(sampleFriends);
+            var volumeProviderFriends = new VolumeSampleProvider(pauseFriends) { Volume = (float)(volume * normalizationGain) };
 
             ISampleProvider sampleMe = ConvertToMixFormat(readerMe.ToSampleProvider());
-            var volumeProviderMe = new VolumeSampleProvider(sampleMe) { Volume = (float)(volume * normalizationGain) };
+            var pauseMe = new PauseableSampleProvider(sampleMe);
+            var volumeProviderMe = new VolumeSampleProvider(pauseMe) { Volume = (float)(volume * normalizationGain) };
 
             lock (_activeSounds)
             {
@@ -362,10 +369,12 @@ namespace SoundBoard.Services
                     MixerInputFriends = volumeProviderFriends,
                     VolumeFriends = volumeProviderFriends,
                     ReaderFriends = readerFriends,
+                    PauseFriends = pauseFriends,
 
                     MixerInputMe = volumeProviderMe,
                     VolumeMe = volumeProviderMe,
-                    ReaderMe = readerMe
+                    ReaderMe = readerMe,
+                    PauseMe = pauseMe
                 };
             }
 
@@ -379,11 +388,45 @@ namespace SoundBoard.Services
             {
                 if (_activeSounds.TryGetValue(buttonId, out var active))
                 {
-                    _mixerFriends?.RemoveMixerInput(active.MixerInputFriends);
-                    _mixerMe?.RemoveMixerInput(active.MixerInputMe);
-                    active.ReaderFriends.Dispose();
-                    active.ReaderMe.Dispose();
+                    // Riattiva prima di fermare per assicurarsi che i buffer vengano rilasciati
+                    active.PauseFriends.IsPaused = false;
+                    active.PauseMe.IsPaused = false;
+
+                    if (_mixerFriends != null)
+                        _mixerFriends.RemoveMixerInput(active.MixerInputFriends);
+                    if (_mixerMe != null)
+                        _mixerMe.RemoveMixerInput(active.MixerInputMe);
+
+                    try { active.ReaderFriends.Dispose(); } catch { }
+                    try { active.ReaderMe.Dispose(); } catch { }
+
                     _activeSounds.Remove(buttonId);
+                }
+            }
+        }
+
+        public void Pause(string buttonId)
+        {
+            lock (_activeSounds)
+            {
+                if (_activeSounds.TryGetValue(buttonId, out var active))
+                {
+                    active.IsPaused = true;
+                    active.PauseFriends.IsPaused = true;
+                    active.PauseMe.IsPaused = true;
+                }
+            }
+        }
+
+        public void Resume(string buttonId)
+        {
+            lock (_activeSounds)
+            {
+                if (_activeSounds.TryGetValue(buttonId, out var active))
+                {
+                    active.IsPaused = false;
+                    active.PauseFriends.IsPaused = false;
+                    active.PauseMe.IsPaused = false;
                 }
             }
         }
@@ -567,5 +610,32 @@ namespace SoundBoard.Services
         }
 
         public void Dispose() => Shutdown();
+    }
+
+    /// <summary>
+    /// Custom SampleProvider per mettere in pausa una traccia all'interno di un MixingSampleProvider
+    /// riempiendo il buffer di silenzio senza far avanzare la posizione della sorgente.
+    /// </summary>
+    public class PauseableSampleProvider : ISampleProvider
+    {
+        private readonly ISampleProvider _source;
+        public bool IsPaused { get; set; }
+
+        public PauseableSampleProvider(ISampleProvider source)
+        {
+            _source = source;
+        }
+
+        public WaveFormat WaveFormat => _source.WaveFormat;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            if (IsPaused)
+            {
+                Array.Clear(buffer, offset, count);
+                return count;
+            }
+            return _source.Read(buffer, offset, count);
+        }
     }
 }

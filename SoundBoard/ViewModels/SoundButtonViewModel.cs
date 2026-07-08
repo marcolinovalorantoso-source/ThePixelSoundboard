@@ -100,6 +100,14 @@ namespace SoundBoard.ViewModels
             set => SetField(ref _isPlaying, value);
         }
 
+        private bool _isPaused;
+        /// <summary>Indica se il suono in riproduzione è in stato di pausa.</summary>
+        public bool IsPaused
+        {
+            get => _isPaused;
+            set => SetField(ref _isPaused, value);
+        }
+
         private double _currentTimeSeconds;
         public double CurrentTimeSeconds
         {

@@ -109,6 +109,22 @@
                                 Content="{Binding IsMuted, Converter={StaticResource MuteIconConv}}"
                                 Command="{Binding DataContext.ToggleMuteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}" Margin="0,0,6,0" ToolTip="Muta/Riattiva"/>
+                        
+                        <!-- Pulsante Play/Pausa -->
+                        <Button Command="{Binding DataContext.TogglePauseCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}" Margin="0,0,6,0" ToolTip="Pausa/Riprendi">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                    <Setter Property="Content" Value="⏸"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                            <Setter Property="Content" Value="▶"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
                         <Button Style="{StaticResource IconButton}" Content="⏹"
                                 Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}" ToolTip="Stop"/>

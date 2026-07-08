@@ -26,6 +26,9 @@ namespace SoundBoard.Views
             {
                 StartWithWindowsCheckBox.IsChecked = _viewModel.StartWithWindows;
                 NormalizeAudioCheckBox.IsChecked = _viewModel.NormalizeAudio;
+                NormalizeDbSlider.Value = _viewModel.NormalizeLoudnessDb;
+                NormalizeDbValueText.Text = $"{_viewModel.NormalizeLoudnessDb:F1} dB";
+                NormalizationPanel.IsEnabled = _viewModel.NormalizeAudio;
 
                 OutputFriendsComboBox.IsEnabled = false;
                 OutputMeComboBox.IsEnabled = false;
@@ -75,8 +78,8 @@ namespace SoundBoard.Views
                             DriverStatusSubtitle.Text = $"{micName} è installato e pronto.";
                             DiscordMicNameRun.Text = micName;
 
-                            // Auto-seleziona il driver virtuale come output amici
-                            if (virtualDevice != null)
+                            // Auto-seleziona il driver virtuale come output amici solo se non è già configurato
+                            if (virtualDevice != null && string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
                                 _viewModel.SelectedOutputFriendsDeviceId = virtualDevice.Id;
 
                             // Seleziona il microfono dell'utente
@@ -183,7 +186,17 @@ namespace SoundBoard.Views
         private void NormalizeAudioCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             if (_isInitializing) return;
-            _viewModel.NormalizeAudio = NormalizeAudioCheckBox.IsChecked ?? false;
+            bool isChecked = NormalizeAudioCheckBox.IsChecked ?? false;
+            _viewModel.NormalizeAudio = isChecked;
+            NormalizationPanel.IsEnabled = isChecked;
+        }
+
+        private void NormalizeDbSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isInitializing) return;
+            double val = NormalizeDbSlider.Value;
+            NormalizeDbValueText.Text = $"{val:F1} dB";
+            _viewModel.NormalizeLoudnessDb = val;
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)

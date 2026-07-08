@@ -62,6 +62,7 @@ namespace SoundBoard.ViewModels
             PlayCommand = new RelayCommand(p => { if (p is SoundButtonViewModel vm) Play(vm); });
             StopCommand = new RelayCommand(p => { if (p is SoundButtonViewModel vm) Stop(vm); });
             ToggleMuteCommand = new RelayCommand(p => { if (p is SoundButtonViewModel vm) ToggleMute(vm); });
+            TogglePauseCommand = new RelayCommand(p => { if (p is SoundButtonViewModel vm) TogglePause(vm); });
             DeleteButtonCommand = new RelayCommand(p => { if (p is SoundButtonViewModel vm) DeleteButton(vm); });
             AddFolderCommand = new RelayCommand(_ => AddFolder());
             DeleteFolderCommand = new RelayCommand(p => { if (p is SoundFolderModel f) DeleteFolder(f); });
@@ -236,6 +237,7 @@ namespace SoundBoard.ViewModels
         public RelayCommand PlayCommand { get; }
         public RelayCommand StopCommand { get; }
         public RelayCommand ToggleMuteCommand { get; }
+        public RelayCommand TogglePauseCommand { get; }
         public RelayCommand DeleteButtonCommand { get; }
         public RelayCommand AddFolderCommand { get; }
         public RelayCommand DeleteFolderCommand { get; }
@@ -256,8 +258,9 @@ namespace SoundBoard.ViewModels
             }
             try
             {
-                _audioEngine.Play(vm.Id, vm.FilePath, vm.IsMuted ? 0 : vm.Volume, NormalizeAudio);
+                _audioEngine.Play(vm.Id, vm.FilePath, vm.IsMuted ? 0 : vm.Volume, NormalizeAudio, NormalizeLoudnessDb);
                 vm.IsPlaying = true;
+                vm.IsPaused = false;
                 if (!PlayingSounds.Contains(vm))
                 {
                     vm.CurrentTimeSeconds = 0;
@@ -334,6 +337,7 @@ namespace SoundBoard.ViewModels
         {
             _audioEngine.Stop(vm.Id);
             vm.IsPlaying = false;
+            vm.IsPaused = false;
             PlayingSounds.Remove(vm);
         }
 
@@ -341,6 +345,20 @@ namespace SoundBoard.ViewModels
         {
             vm.IsMuted = !vm.IsMuted;
             _audioEngine.SetMuted(vm.Id, vm.IsMuted, vm.Volume);
+        }
+
+        private void TogglePause(SoundButtonViewModel vm)
+        {
+            if (vm.IsPaused)
+            {
+                _audioEngine.Resume(vm.Id);
+                vm.IsPaused = false;
+            }
+            else
+            {
+                _audioEngine.Pause(vm.Id);
+                vm.IsPaused = true;
+            }
         }
 
         private void OnSoundEndedNaturally(string buttonId)
@@ -351,6 +369,7 @@ namespace SoundBoard.ViewModels
                 if (vm != null)
                 {
                     vm.IsPlaying = false;
+                    vm.IsPaused = false;
                     PlayingSounds.Remove(vm);
                 }
             });
@@ -483,6 +502,18 @@ namespace SoundBoard.ViewModels
                 _settings.NormalizeAudio = value;
                 SaveState();
                 OnPropertyChanged(nameof(NormalizeAudio));
+            }
+        }
+
+        public double NormalizeLoudnessDb
+        {
+            get => _settings.NormalizeLoudnessDb;
+            set
+            {
+                if (Math.Abs(_settings.NormalizeLoudnessDb - value) < 0.1) return;
+                _settings.NormalizeLoudnessDb = value;
+                SaveState();
+                OnPropertyChanged(nameof(NormalizeLoudnessDb));
             }
         }
 

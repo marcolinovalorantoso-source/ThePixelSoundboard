@@ -145,10 +145,20 @@
 
         <CheckBox x:Name="NormalizeAudioCheckBox"
                   Content="Normalizza volume audio delle clip (evita suoni troppo alti o bassi)"
-                  Margin="0,0,0,20"
+                  Margin="0,0,0,10"
                   Checked="NormalizeAudioCheckBox_Changed"
                   Unchecked="NormalizeAudioCheckBox_Changed"
                   Foreground="#F1F2F6"/>
+
+        <!-- Slider per decibel di normalizzazione -->
+        <StackPanel x:Name="NormalizationPanel" Margin="20,0,0,20">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <TextBlock Text="Volume target normalizzazione:" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold"/>
+                <TextBlock x:Name="NormalizeDbValueText" Text="-1.0 dB" Foreground="#5BE56B" FontSize="11" FontWeight="Bold" Margin="8,0,0,0"/>
+            </StackPanel>
+            <Slider x:Name="NormalizeDbSlider" Minimum="-12" Maximum="0" TickFrequency="0.5" IsSnapToTickEnabled="True"
+                    ValueChanged="NormalizeDbSlider_ValueChanged" />
+        </StackPanel>
 
         <TextBlock Text="Le impostazioni vengono salvate automaticamente."
                    Foreground="#F1F2F6" FontStyle="Italic" Margin="0,0,0,16"/>

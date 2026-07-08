@@ -26,8 +26,8 @@ Source: "installer\vbcable\*"; DestDir: "{tmp}\vbcable"; Flags: deleteafterinsta
 Source: "installer\rename_device.ps1"; DestDir: "{app}"; Flags: ignoreversion; Components: driver
 
 [Icons]
-Name: "{group}\ThePixelSoundboard"; Filename: "{app}\SoundBoard.exe"
-Name: "{autodesktop}\ThePixelSoundboard"; Filename: "{app}\SoundBoard.exe"; Tasks: desktopicon
+Name: "{group}\ThePixelSoundboard"; Filename: "{app}\SoundBoard.exe"; WorkingDir: "{app}"
+Name: "{autodesktop}\ThePixelSoundboard"; Filename: "{app}\SoundBoard.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked

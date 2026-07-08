@@ -29,6 +29,9 @@ namespace SoundBoard.Models
 
         /// <summary>Se true, normalizza l'audio delle clip al picco massimo durante la riproduzione.</summary>
         public bool NormalizeAudio { get; set; } = false;
+
+        /// <summary>Volume di normalizzazione target in decibel. Di default -1.0 dB.</summary>
+        public double NormalizeLoudnessDb { get; set; } = -1.0;
         
         /// <summary>Se true, l'app si avvia automaticamente con Windows.</summary>
         public bool StartWithWindows { get; set; } = false;
