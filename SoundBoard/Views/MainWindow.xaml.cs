@@ -245,10 +245,27 @@ namespace SoundBoard.Views
         {
             try
             {
-                var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gg.mp3");
-                if (File.Exists(filePath))
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                // Il nome completo della risorsa è RootNamespace.NomeFile
+                var resourceName = "SoundBoard.gg.mp3";
+                
+                using (var resourceStream = assembly.GetManifestResourceStream(resourceName))
                 {
-                    _viewModel.PlayPreview(filePath);
+                    if (resourceStream == null) return;
+
+                    var tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard", "Temp");
+                    Directory.CreateDirectory(tempFolder);
+                    var tempFilePath = Path.Combine(tempFolder, "temp_egg.mp3");
+
+                    using (var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write))
+                    {
+                        resourceStream.CopyTo(fileStream);
+                    }
+
+                    if (File.Exists(tempFilePath))
+                    {
+                        _viewModel.PlayPreview(tempFilePath);
+                    }
                 }
             }
             catch (Exception ex)

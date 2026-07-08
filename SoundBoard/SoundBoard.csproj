@@ -22,8 +22,6 @@
     <Resource Include="settings_gear.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="gg.mp3">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="gg.mp3" />
   </ItemGroup>
 </Project>
