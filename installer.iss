@@ -34,7 +34,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Run]
 ; Installa il driver VB-Cable solo se il componente è selezionato e il driver non è già presente
-Filename: "{tmp}\vbcable\VBCABLE_Setup_x64.exe"; Parameters: "-i -h"; StatusMsg: "Installazione del driver audio virtuale in corso (potrebbe richiedere qualche secondo)..."; Flags: runascurrentuser; Components: driver; Check: not IsVBCableInstalled
+Filename: "{tmp}\vbcable\VBCABLE_Setup_x64.exe"; Parameters: "-i"; StatusMsg: "Installazione del driver audio virtuale in corso (potrebbe richiedere qualche secondo)..."; Flags: runascurrentuser; Components: driver; Check: not IsVBCableInstalled
 ; Esegue lo script PowerShell per rinominare i dispositivi nel Registro di sistema in "ThePixelSoundboard Audio / Mic"
 Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\rename_device.ps1"""; Flags: runhidden; Components: driver
 ; Avvia l'app al termine (solo se non è necessario il riavvio)
