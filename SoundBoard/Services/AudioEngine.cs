@@ -156,16 +156,44 @@ namespace SoundBoard.Services
                                 meDeviceNumber = pm;
                         }
 
-                        var waveOutFriends = new WaveOutEvent { DeviceNumber = friendsDeviceNumber };
-                        waveOutFriends.Init(_masterVolumeFriends);
-                        waveOutFriends.Play();
+                        // Apri il canale Amici con fallback automatico al device di default
+                        IWavePlayer waveOutFriends;
+                        try
+                        {
+                            var wo = new WaveOutEvent { DeviceNumber = friendsDeviceNumber };
+                            wo.Init(_masterVolumeFriends);
+                            wo.Play();
+                            waveOutFriends = wo;
+                        }
+                        catch
+                        {
+                            // Fallback: usa il dispositivo di default del sistema
+                            var wo = new WaveOutEvent { DeviceNumber = -1 };
+                            wo.Init(_masterVolumeFriends);
+                            wo.Play();
+                            waveOutFriends = wo;
+                        }
                         _outputFriends = waveOutFriends;
 
-                        System.Threading.Thread.Sleep(300);
+                        System.Threading.Thread.Sleep(200);
 
-                        var waveOutMe = new WaveOutEvent { DeviceNumber = meDeviceNumber };
-                        waveOutMe.Init(_masterVolumeMe);
-                        waveOutMe.Play();
+                        // Apri il canale Cuffie con fallback automatico al device di default
+                        IWavePlayer waveOutMe;
+                        try
+                        {
+                            var wo = new WaveOutEvent { DeviceNumber = meDeviceNumber };
+                            wo.Init(_masterVolumeMe);
+                            wo.Play();
+                            waveOutMe = wo;
+                        }
+                        catch
+                        {
+                            // Fallback: usa il dispositivo di default del sistema
+                            var wo = new WaveOutEvent { DeviceNumber = -1 };
+                            wo.Init(_masterVolumeMe);
+                            wo.Play();
+                            waveOutMe = wo;
+                        }
                         _outputMe = waveOutMe;
 
                         // Avvia il loopback del microfono

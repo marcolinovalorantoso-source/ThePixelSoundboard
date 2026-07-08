@@ -24,23 +24,50 @@ namespace SoundBoard.Services
         /// <summary>Carica le impostazioni da disco, oppure ne crea di nuove se non esistono.</summary>
         public AppSettings Load()
         {
+            AppSettings settings;
             try
             {
                 if (File.Exists(SettingsFile))
                 {
                     var json = File.ReadAllText(SettingsFile);
-                    var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
-                    if (settings != null)
-                        return settings;
+                    settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+                }
+                else
+                {
+                    settings = new AppSettings();
                 }
             }
             catch
             {
                 // File corrotto o illeggibile: si riparte con impostazioni pulite
-                // per non bloccare l'avvio dell'app.
+                settings = new AppSettings();
             }
 
-            return new AppSettings();
+            // Valida i device ID: se puntano a un indice fuori range, azzera per evitare
+            // l'errore "AlreadyAllocated calling waveOutOpen" su installazioni fresche.
+            int outputCount = NAudio.Wave.WaveOut.DeviceCount;
+            if (settings.OutputFriendsDeviceId != null &&
+                int.TryParse(settings.OutputFriendsDeviceId, out int pf) &&
+                (pf < 0 || pf >= outputCount))
+            {
+                settings.OutputFriendsDeviceId = null;
+            }
+            if (settings.OutputMeDeviceId != null &&
+                int.TryParse(settings.OutputMeDeviceId, out int pm) &&
+                (pm < 0 || pm >= outputCount))
+            {
+                settings.OutputMeDeviceId = null;
+            }
+
+            int inputCount = NAudio.Wave.WaveIn.DeviceCount;
+            if (settings.InputMicrophoneDeviceId != null &&
+                int.TryParse(settings.InputMicrophoneDeviceId, out int mic) &&
+                (mic < 0 || mic >= inputCount))
+            {
+                settings.InputMicrophoneDeviceId = null;
+            }
+
+            return settings;
         }
 
         /// <summary>Salva le impostazioni su disco in modo sincrono ma leggero (file JSON di piccole dimensioni).</summary>
