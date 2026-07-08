@@ -60,20 +60,18 @@ namespace SoundBoard.Views
                         OutputMeComboBox.ItemsSource = devices;
                         InputMicComboBox.ItemsSource = inputDevices;
 
+                        // Applica lo stato della checkbox
+                        UseVirtualDriverCheckBox.IsChecked = _viewModel.UseVirtualDriver;
+
                         if (hasVirtualDriver)
                         {
-                            // Driver trovato: nascondi selezione amici, mostra selezione microfono reale, mostra info Discord
-                            FriendsOutputPanel.Visibility = System.Windows.Visibility.Collapsed;
-                            PhysicalMicPanel.Visibility = System.Windows.Visibility.Visible;
-                            DiscordInfoBorder.Visibility = System.Windows.Visibility.Visible;
+                            UseVirtualDriverCheckBox.IsEnabled = true;
                             DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
                                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1A3A1A"));
                             DriverStatusIcon.Text = "✅";
-                            DriverStatusTitle.Text = "Driver Virtuale Attivo";
+                            DriverStatusTitle.Text = "Driver Virtuale Rilevato";
                             string micName = isRenamed ? "ThePixelSoundboard Mic" : "CABLE Output";
-                            DriverStatusSubtitle.Text = $"{micName} è pronto — selezionalo come microfono in Discord";
-
-                            // Aggiorna il testo della guida Discord con il nome corretto
+                            DriverStatusSubtitle.Text = $"{micName} è installato e pronto.";
                             DiscordMicNameRun.Text = micName;
 
                             // Auto-seleziona il driver virtuale come output amici
@@ -88,10 +86,10 @@ namespace SoundBoard.Views
                         }
                         else
                         {
-                            // Driver non trovato: mostra selezione manuale amici, nascondi microfono fisico
-                            FriendsOutputPanel.Visibility = System.Windows.Visibility.Visible;
-                            PhysicalMicPanel.Visibility = System.Windows.Visibility.Collapsed;
-                            DiscordInfoBorder.Visibility = System.Windows.Visibility.Collapsed;
+                            UseVirtualDriverCheckBox.IsEnabled = false;
+                            UseVirtualDriverCheckBox.IsChecked = false;
+                            _viewModel.UseVirtualDriver = false;
+
                             DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
                                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3A2A1A"));
                             DriverStatusIcon.Text = "⚠️";
@@ -103,6 +101,9 @@ namespace SoundBoard.Views
                             else if (devices.Count > 0)
                                 OutputFriendsComboBox.SelectedIndex = 0;
                         }
+
+                        // Aggiorna visibilità dei pannelli in base alla modalità selezionata
+                        UpdatePanelsVisibility(_viewModel.UseVirtualDriver);
 
                         if (!string.IsNullOrEmpty(_viewModel.SelectedOutputMeDeviceId))
                             OutputMeComboBox.SelectedValue = _viewModel.SelectedOutputMeDeviceId;
@@ -144,6 +145,30 @@ namespace SoundBoard.Views
             if (_isInitializing) return;
             if (InputMicComboBox.SelectedItem is AudioInputDevice device)
                 _viewModel.SelectedInputMicrophoneDeviceId = device.Id;
+        }
+
+        private void UseVirtualDriverCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+            bool isChecked = UseVirtualDriverCheckBox.IsChecked ?? false;
+            _viewModel.UseVirtualDriver = isChecked;
+            UpdatePanelsVisibility(isChecked);
+        }
+
+        private void UpdatePanelsVisibility(bool useDriver)
+        {
+            if (useDriver)
+            {
+                FriendsOutputPanel.Visibility = Visibility.Collapsed;
+                PhysicalMicPanel.Visibility = Visibility.Visible;
+                DiscordInfoBorder.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                FriendsOutputPanel.Visibility = Visibility.Visible;
+                PhysicalMicPanel.Visibility = Visibility.Collapsed;
+                DiscordInfoBorder.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void StartWithWindowsCheckBox_Changed(object sender, RoutedEventArgs e)

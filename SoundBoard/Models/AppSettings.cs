@@ -23,6 +23,9 @@ namespace SoundBoard.Models
 
         /// <summary>ID del dispositivo di input per il microfono reale. Null = disattivato.</summary>
         public string? InputMicrophoneDeviceId { get; set; } = null;
+
+        /// <summary>Se true, utilizza il driver virtuale (input/output) anziché i 2 output.</summary>
+        public bool UseVirtualDriver { get; set; } = false;
         
         /// <summary>Se true, l'app si avvia automaticamente con Windows.</summary>
         public bool StartWithWindows { get; set; } = false;

@@ -417,8 +417,21 @@ namespace SoundBoard.ViewModels
             {
                 if (_settings.InputMicrophoneDeviceId == value) return;
                 _settings.InputMicrophoneDeviceId = value;
-                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, _settings.InputMicrophoneDeviceId, MasterVolume);
+                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, UseVirtualDriver ? _settings.InputMicrophoneDeviceId : null, MasterVolume);
                 SaveState();
+            }
+        }
+
+        public bool UseVirtualDriver
+        {
+            get => _settings.UseVirtualDriver;
+            set
+            {
+                if (_settings.UseVirtualDriver == value) return;
+                _settings.UseVirtualDriver = value;
+                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, value ? _settings.InputMicrophoneDeviceId : null, MasterVolume);
+                SaveState();
+                OnPropertyChanged(nameof(UseVirtualDriver));
             }
         }
 
@@ -450,12 +463,21 @@ namespace SoundBoard.ViewModels
             try
             {
                 var devices = _audioEngine.GetOutputDevices();
-                var target = devices.FirstOrDefault(d => d.Name.Contains("ThePixelSoundboard Audio") || d.Name.Contains("CABLE Input"));
+                // Rileva se il driver rinominato è presente per l'auto-attivazione
+                var renamedTarget = devices.FirstOrDefault(d => d.Name.Contains("ThePixelSoundboard Audio"));
+                var genericTarget = devices.FirstOrDefault(d => d.Name.Contains("CABLE Input"));
+                
+                var target = renamedTarget ?? genericTarget;
                 if (target != null)
                 {
                     _settings.OutputFriendsDeviceId = target.Id;
                     
-                    // Se il driver è attivo ma non c'è un microfono salvato, seleziona quello predefinito (indice 0)
+                    // Auto-attiva la modalità driver virtuale solo se rileviamo la versione rinominata (installazione con driver)
+                    if (renamedTarget != null && !_settings.UseVirtualDriver && string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))
+                    {
+                        _settings.UseVirtualDriver = true;
+                    }
+                    
                     if (string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))
                     {
                         var inputDevices = _audioEngine.GetInputDevices();
@@ -468,7 +490,7 @@ namespace SoundBoard.ViewModels
             }
             catch { }
 
-            _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, _settings.InputMicrophoneDeviceId, _masterVolume);
+            _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, _settings.UseVirtualDriver ? _settings.InputMicrophoneDeviceId : null, _masterVolume);
         }
 
         public void SaveState() => _settingsService.Save(_settings);

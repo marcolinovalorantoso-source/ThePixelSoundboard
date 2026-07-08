@@ -94,6 +94,15 @@
             </StackPanel>
         </Border>
 
+        <!-- Toggle per abilitare/disabilitare manualmente la modalità Driver Virtuale -->
+        <CheckBox x:Name="UseVirtualDriverCheckBox"
+                  Content="Usa Driver Audio Virtuale (Microfono integrato)"
+                  Margin="0,0,0,20"
+                  Checked="UseVirtualDriverCheckBox_Changed"
+                  Unchecked="UseVirtualDriverCheckBox_Changed"
+                  Foreground="#F1F2F6"
+                  FontWeight="Bold"/>
+
         <!-- Output Amici (nascosto se driver virtuale presente) -->
         <StackPanel x:Name="FriendsOutputPanel">
             <TextBlock Text="Dispositivo output (Amici / Discord)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
