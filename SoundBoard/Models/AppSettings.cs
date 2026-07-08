@@ -1,0 +1,37 @@
+using System.Collections.Generic;
+
+namespace SoundBoard.Models
+{
+    /// <summary>
+    /// Contiene tutte le impostazioni persistite dell'applicazione:
+    /// pulsanti, cartelle, volume master, dispositivi audio, avvio con Windows.
+    /// Viene salvato/caricato automaticamente in formato JSON.
+    /// </summary>
+    public class AppSettings
+    {
+        public List<SoundFolderModel> Folders { get; set; } = new();
+        public List<SoundButtonModel> Buttons { get; set; } = new();
+        
+        /// <summary>Volume master, range 0.0 - 1.0.</summary>
+        public double MasterVolume { get; set; } = 1.0;
+        
+        /// <summary>ID del dispositivo di output audio per gli amici (es. cavo virtuale). Null = predefinito di sistema.</summary>
+        public string? OutputFriendsDeviceId { get; set; } = "13"; // CABLE Input
+        
+        /// <summary>ID del dispositivo di output audio per te (cuffie/speaker). Null = predefinito di sistema.</summary>
+        public string? OutputMeDeviceId { get; set; } = "0"; // Realtek HD Audio 2nd output
+
+        /// <summary>ID del dispositivo di input per il microfono reale. Null = disattivato.</summary>
+        public string? InputMicrophoneDeviceId { get; set; } = null;
+        
+        /// <summary>Se true, l'app si avvia automaticamente con Windows.</summary>
+        public bool StartWithWindows { get; set; } = false;
+        
+        /// <summary>Ultima cartella selezionata nell'interfaccia.</summary>
+        public string LastSelectedFolderId { get; set; } = "root";
+        
+        /// <summary>Larghezza/altezza finestra salvate per riapertura.</summary>
+        public double WindowWidth { get; set; } = 1200;
+        public double WindowHeight { get; set; } = 750;
+    }
+}

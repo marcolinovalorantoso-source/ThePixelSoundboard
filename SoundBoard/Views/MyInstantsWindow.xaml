@@ -1,0 +1,200 @@
+<Window x:Class="SoundBoard.Views.MyInstantsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🌐 Sfoglia MyInstants" Width="900" Height="620"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        Background="#1B1D23" Icon="/settings_icon.ico">
+    
+    <Window.Resources>
+        <!-- Success Brush -->
+        <SolidColorBrush x:Key="SuccessBrush" Color="#2ECC71"/>
+        <SolidColorBrush x:Key="BgDarkBrush" Color="#1B1D23"/>
+        <SolidColorBrush x:Key="BgPanelBrush" Color="#232631"/>
+        <SolidColorBrush x:Key="BgElevatedBrush" Color="#2A2E3A"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F1F2F6"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9AA0AE"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#5B8C5A"/>
+
+        <!-- Custom Card Style -->
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="#232631"/>
+            <Setter Property="BorderBrush" Value="#2A2E3A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="180"/>
+        </Style>
+
+        <!-- Round Instant Button Style -->
+        <Style x:Key="InstantButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="64"/>
+            <Setter Property="Height" Value="64"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <!-- Base Drop Shadow -->
+                            <Ellipse Fill="#111111" Margin="2,4,-2,-4" Opacity="0.5"/>
+                            <!-- Button Body -->
+                            <Ellipse x:Name="ellipse" Fill="{TemplateBinding Background}"/>
+                            <!-- Gloss/Highlight -->
+                            <Ellipse Margin="6,3,6,0" VerticalAlignment="Top" Height="15" Opacity="0.15">
+                                <Ellipse.Fill>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="White" Offset="0"/>
+                                        <GradientStop Color="Transparent" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <!-- Symbol -->
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ellipse" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ellipse" Property="Margin" Value="1,2,-1,-2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/> <!-- Sidebar Categorie -->
+            <ColumnDefinition Width="*"/>   <!-- Area Risultati -->
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= SIDEBAR CATEGORIE ================= -->
+        <Border Grid.Column="0" Background="{StaticResource BgPanelBrush}" BorderBrush="#2A2E3A" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="CATEGORIE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="16,16,16,8"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="CategoriesStack" Margin="8,0">
+                        <!-- Populated programmatically in codebehind -->
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ================= AREA RISULTATI ================= -->
+        <Grid Grid.Column="1" Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Barra di ricerca -->
+                <RowDefinition Height="*"/>    <!-- Griglia dei suoni -->
+                <RowDefinition Height="Auto"/> <!-- Barra di stato / Paginazione -->
+            </Grid.RowDefinitions>
+
+            <!-- Barra di ricerca -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="SearchTextBox" Grid.Column="0" FontSize="14" Padding="10,8" 
+                         Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource TextPrimaryBrush}" 
+                         BorderBrush="#3A3F4E" BorderThickness="1" KeyDown="SearchTextBox_KeyDown"/>
+                
+                <!-- Placeholder Text (Cerca...) -->
+                <TextBlock IsHitTestVisible="False" Text="🔍 Cerca un suono su MyInstants..." VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <Button Grid.Column="1" Content="Cerca" Padding="16,6" Margin="10,0,0,0" Click="SearchButton_Click"/>
+            </Grid>
+
+            <!-- Griglia dei suoni -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" ScrollChanged="ResultsScrollViewer_ScrollChanged">
+                <StackPanel>
+                    <!-- Contenitore Griglia -->
+                    <ItemsControl x:Name="SoundsItemsControl">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorder}">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>      <!-- Titolo -->
+                                            <RowDefinition Height="Auto"/>   <!-- Pulsante Instant -->
+                                            <RowDefinition Height="Auto"/>   <!-- Pulsanti Azione -->
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Titolo del suono -->
+                                        <TextBlock Grid.Row="0" Text="{Binding Name}" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" 
+                                                   TextAlignment="Center" TextWrapping="Wrap" MaxHeight="38" 
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <!-- Bottone Instant -->
+                                        <Button Grid.Row="1" Style="{StaticResource InstantButtonStyle}" Margin="0,10"
+                                                Background="{Binding ColorBrush}" Click="PreviewButton_Click"
+                                                ToolTip="Ascolta anteprima">
+                                            <TextBlock Text="▶" Foreground="White" FontSize="16" FontWeight="Bold" Margin="4,0,0,0"/>
+                                        </Button>
+
+                                        <!-- Pulsante Importa -->
+                                        <Button Grid.Row="2" Style="{StaticResource FlatButton}" Content="⬇️ Importa" 
+                                                Padding="8,4" FontSize="10" HorizontalAlignment="Stretch"
+                                                Click="ImportButton_Click" ToolTip="Scarica e aggiungi alla SoundBoard"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Indicatore di caricamento in fondo per scroll infinito -->
+                    <ProgressBar x:Name="BottomLoadingProgress" IsIndeterminate="True" Height="4" Margin="0,20,0,10" Visibility="Collapsed"/>
+                    
+                    <!-- Bottone Carica Altri -->
+                    <Button x:Name="LoadMoreButton" Content="Carica altri suoni" Margin="0,15,0,25" HorizontalAlignment="Center" Width="200" Click="LoadMoreButton_Click" Visibility="Collapsed"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Loading Overlay per ricerca iniziale -->
+            <Grid Grid.Row="1" x:Name="LoadingOverlay" Background="#901B1D23" Visibility="Collapsed">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="200" Height="6" Margin="0,0,0,10"/>
+                    <TextBlock Text="Ricerca in corso su MyInstants..." Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Nessun risultato trovato -->
+            <TextBlock Grid.Row="1" x:Name="NoResultsTextBlock" Text="Nessun suono trovato." Foreground="{StaticResource TextSecondaryBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+
+            <!-- Barra di stato -->
+            <Border Grid.Row="2" Background="{StaticResource BgPanelBrush}" CornerRadius="6" Padding="10,6" Margin="0,10,0,0">
+                <Grid>
+                    <TextBlock x:Name="StatusTextBlock" Text="Pronto" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="SelectedFolderTextBlock" Text="Importa in: Tutti i suoni" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

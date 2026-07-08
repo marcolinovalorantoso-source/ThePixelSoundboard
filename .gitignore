@@ -1,0 +1,50 @@
+## Ignore Visual Studio Temporary Files and Build Outputs
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userresourcecode
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Re]leasePublic/
+x64/
+x86/
+build/
+bld/
+Bin/
+Obj/
+bin/
+obj/
+
+# Visual Studio 2015/2017/2019/2022 cache directory
+.vs/
+
+# Resharper
+_ReSharper*/
+*.[Re]sharper.user
+*.DotSettings.user
+
+# Rider
+.idea/
+
+# Windows image analyses
+Thumbs.db
+ehthumbs.db
+
+# Folder cookies/history
+Desktop.ini
+
+# AppSettings and temp database
+*.json
+!SoundBoard/global.json
+
+# Exclude generated installers and zips from git
+*.zip
+*.exe
+!SoundBoard/app_icon.ico
+!SoundBoard/settings_icon.ico
+!SoundBoard/installer/vbcable/*.exe
