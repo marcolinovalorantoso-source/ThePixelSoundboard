@@ -20,6 +20,8 @@ namespace SoundBoard.ViewModels
         public ObservableCollection<SoundButtonViewModel> AllButtons { get; } = new();
         public ObservableCollection<SoundButtonViewModel> FilteredButtons { get; } = new();
         public ObservableCollection<SoundButtonViewModel> PlayingSounds { get; } = new();
+        
+        private readonly System.Windows.Threading.DispatcherTimer _progressTimer;
 
         /// <summary>Ultimi suoni riprodotti, il più recente in testa. Max 10 elementi.</summary>
         public ObservableCollection<SoundButtonViewModel> History { get; } = new();
@@ -71,6 +73,27 @@ namespace SoundBoard.ViewModels
             StopSequenceCommand = new RelayCommand(_ => StopSequence());
 
             RefreshFilter();
+
+            _progressTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+            _progressTimer.Tick += ProgressTimer_Tick;
+            _progressTimer.Start();
+        }
+
+        private void ProgressTimer_Tick(object? sender, EventArgs e)
+        {
+            foreach (var vm in PlayingSounds)
+            {
+                if (vm.IsUserSeeking) continue;
+
+                var current = _audioEngine.GetCurrentTime(vm.Id);
+                var total = _audioEngine.GetTotalTime(vm.Id);
+
+                vm.CurrentTimeSeconds = current.TotalSeconds;
+                vm.TotalTimeSeconds = total.TotalSeconds;
+            }
         }
 
         private string _searchText = string.Empty;
@@ -233,10 +256,14 @@ namespace SoundBoard.ViewModels
             }
             try
             {
-                _audioEngine.Play(vm.Id, vm.FilePath, vm.IsMuted ? 0 : vm.Volume);
+                _audioEngine.Play(vm.Id, vm.FilePath, vm.IsMuted ? 0 : vm.Volume, NormalizeAudio);
                 vm.IsPlaying = true;
                 if (!PlayingSounds.Contains(vm))
+                {
+                    vm.CurrentTimeSeconds = 0;
+                    vm.TotalTimeSeconds = 0;
                     PlayingSounds.Add(vm);
+                }
                 AddToHistory(vm);
             }
             catch (Exception ex)
@@ -333,6 +360,7 @@ namespace SoundBoard.ViewModels
         {
             vm.VolumeChanged += (_, volume) => _audioEngine.SetVolume(vm.Id, volume);
             vm.MuteChanged += (_, muted) => _audioEngine.SetMuted(vm.Id, muted, vm.Volume);
+            vm.SeekRequested += (_, seconds) => _audioEngine.SetCurrentTime(vm.Id, TimeSpan.FromSeconds(seconds));
         }
 
         private void RegisterHotkeyIfPresent(SoundButtonViewModel vm)
@@ -446,6 +474,18 @@ namespace SoundBoard.ViewModels
             }
         }
 
+        public bool NormalizeAudio
+        {
+            get => _settings.NormalizeAudio;
+            set
+            {
+                if (_settings.NormalizeAudio == value) return;
+                _settings.NormalizeAudio = value;
+                SaveState();
+                OnPropertyChanged(nameof(NormalizeAudio));
+            }
+        }
+
         private void LoadState()
         {
             _settings = _settingsService.Load();
@@ -517,6 +557,7 @@ namespace SoundBoard.ViewModels
 
         public void Dispose()
         {
+            _progressTimer.Stop();
             StopSequence();
             _audioEngine.SoundEnded -= OnSoundEndedNaturally;
             _hotkeyManager.Dispose();

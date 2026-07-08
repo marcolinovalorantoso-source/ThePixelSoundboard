@@ -287,5 +287,22 @@ namespace SoundBoard.Views
                     MessageBoxImage.Information);
             }
         }
+
+        private void ProgressSlider_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Slider slider && slider.DataContext is SoundButtonViewModel vm)
+            {
+                vm.IsUserSeeking = true;
+            }
+        }
+
+        private void ProgressSlider_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Slider slider && slider.DataContext is SoundButtonViewModel vm)
+            {
+                vm.IsUserSeeking = false;
+                vm.SeekTo(slider.Value);
+            }
+        }
     }
 }

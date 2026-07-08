@@ -265,7 +265,70 @@ namespace SoundBoard.Services
                 _masterVolumeMe.Volume = vol;
         }
 
-        public void Play(string buttonId, string filePath, double volume)
+        public TimeSpan GetCurrentTime(string buttonId)
+        {
+            lock (_activeSounds)
+            {
+                if (_activeSounds.TryGetValue(buttonId, out var active))
+                {
+                    try { return active.ReaderMe.CurrentTime; } catch { }
+                }
+            }
+            return TimeSpan.Zero;
+        }
+
+        public TimeSpan GetTotalTime(string buttonId)
+        {
+            lock (_activeSounds)
+            {
+                if (_activeSounds.TryGetValue(buttonId, out var active))
+                {
+                    try { return active.ReaderMe.TotalTime; } catch { }
+                }
+            }
+            return TimeSpan.Zero;
+        }
+
+        public void SetCurrentTime(string buttonId, TimeSpan time)
+        {
+            lock (_activeSounds)
+            {
+                if (_activeSounds.TryGetValue(buttonId, out var active))
+                {
+                    try { active.ReaderFriends.CurrentTime = time; } catch {}
+                    try { active.ReaderMe.CurrentTime = time; } catch {}
+                }
+            }
+        }
+
+        private static float GetPeakVolume(WaveStream stream)
+        {
+            try
+            {
+                var originalPosition = stream.Position;
+                stream.Position = 0;
+                var sampleProvider = stream.ToSampleProvider();
+                float max = 0;
+                float[] buffer = new float[4096];
+                int read;
+                while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    for (int i = 0; i < read; i++)
+                    {
+                        var abs = Math.Abs(buffer[i]);
+                        if (abs > max) max = abs;
+                    }
+                }
+                stream.Position = originalPosition;
+                return max;
+            }
+            catch
+            {
+                return 1.0f;
+            }
+        }
+
+        public void Play(string buttonId, string filePath, double volume, bool normalize = false)
         {
             if (_mixerFriends == null || _mixerMe == null)
                 throw new InvalidOperationException("AudioEngine non inizializzato.");
@@ -273,12 +336,24 @@ namespace SoundBoard.Services
             Stop(buttonId);
 
             WaveStream readerFriends = OpenReader(filePath);
-            ISampleProvider sampleFriends = ConvertToMixFormat(readerFriends.ToSampleProvider());
-            var volumeProviderFriends = new VolumeSampleProvider(sampleFriends) { Volume = (float)volume };
-
             WaveStream readerMe = OpenReader(filePath);
+
+            float normalizationGain = 1.0f;
+            if (normalize)
+            {
+                float peak = GetPeakVolume(readerFriends);
+                if (peak > 0.01f)
+                {
+                    normalizationGain = 0.95f / peak;
+                    if (normalizationGain > 4.0f) normalizationGain = 4.0f; // max boost limit
+                }
+            }
+
+            ISampleProvider sampleFriends = ConvertToMixFormat(readerFriends.ToSampleProvider());
+            var volumeProviderFriends = new VolumeSampleProvider(sampleFriends) { Volume = (float)(volume * normalizationGain) };
+
             ISampleProvider sampleMe = ConvertToMixFormat(readerMe.ToSampleProvider());
-            var volumeProviderMe = new VolumeSampleProvider(sampleMe) { Volume = (float)volume };
+            var volumeProviderMe = new VolumeSampleProvider(sampleMe) { Volume = (float)(volume * normalizationGain) };
 
             lock (_activeSounds)
             {

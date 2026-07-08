@@ -25,6 +25,7 @@ namespace SoundBoard.Views
             try
             {
                 StartWithWindowsCheckBox.IsChecked = _viewModel.StartWithWindows;
+                NormalizeAudioCheckBox.IsChecked = _viewModel.NormalizeAudio;
 
                 OutputFriendsComboBox.IsEnabled = false;
                 OutputMeComboBox.IsEnabled = false;
@@ -129,6 +130,7 @@ namespace SoundBoard.Views
         private void OutputFriendsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isInitializing) return;
+            if (!OutputFriendsComboBox.IsDropDownOpen) return;
             if (OutputFriendsComboBox.SelectedItem is AudioOutputDevice device)
                 _viewModel.SelectedOutputFriendsDeviceId = device.Id;
         }
@@ -136,6 +138,7 @@ namespace SoundBoard.Views
         private void OutputMeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isInitializing) return;
+            if (!OutputMeComboBox.IsDropDownOpen) return;
             if (OutputMeComboBox.SelectedItem is AudioOutputDevice device)
                 _viewModel.SelectedOutputMeDeviceId = device.Id;
         }
@@ -143,6 +146,7 @@ namespace SoundBoard.Views
         private void InputMicComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isInitializing) return;
+            if (!InputMicComboBox.IsDropDownOpen) return;
             if (InputMicComboBox.SelectedItem is AudioInputDevice device)
                 _viewModel.SelectedInputMicrophoneDeviceId = device.Id;
         }
@@ -174,6 +178,12 @@ namespace SoundBoard.Views
         private void StartWithWindowsCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             _viewModel.StartWithWindows = StartWithWindowsCheckBox.IsChecked ?? false;
+        }
+
+        private void NormalizeAudioCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+            _viewModel.NormalizeAudio = NormalizeAudioCheckBox.IsChecked ?? false;
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)

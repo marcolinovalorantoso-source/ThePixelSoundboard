@@ -26,6 +26,9 @@ namespace SoundBoard.Models
 
         /// <summary>Se true, utilizza il driver virtuale (input/output) anziché i 2 output.</summary>
         public bool UseVirtualDriver { get; set; } = false;
+
+        /// <summary>Se true, normalizza l'audio delle clip al picco massimo durante la riproduzione.</summary>
+        public bool NormalizeAudio { get; set; } = false;
         
         /// <summary>Se true, l'app si avvia automaticamente con Windows.</summary>
         public bool StartWithWindows { get; set; } = false;

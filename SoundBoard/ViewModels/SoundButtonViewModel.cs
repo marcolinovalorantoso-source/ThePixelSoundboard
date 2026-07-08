@@ -100,10 +100,60 @@ namespace SoundBoard.ViewModels
             set => SetField(ref _isPlaying, value);
         }
 
+        private double _currentTimeSeconds;
+        public double CurrentTimeSeconds
+        {
+            get => _currentTimeSeconds;
+            set
+            {
+                if (SetField(ref _currentTimeSeconds, value))
+                {
+                    UpdateTimeDisplay();
+                }
+            }
+        }
+
+        private double _totalTimeSeconds;
+        public double TotalTimeSeconds
+        {
+            get => _totalTimeSeconds;
+            set
+            {
+                if (SetField(ref _totalTimeSeconds, value))
+                {
+                    UpdateTimeDisplay();
+                }
+            }
+        }
+
+        private string _timeDisplay = "00:00 / 00:00";
+        public string TimeDisplay
+        {
+            get => _timeDisplay;
+            set => SetField(ref _timeDisplay, value);
+        }
+
+        public bool IsUserSeeking { get; set; }
+
+        private void UpdateTimeDisplay()
+        {
+            var cur = System.TimeSpan.FromSeconds(CurrentTimeSeconds);
+            var tot = System.TimeSpan.FromSeconds(TotalTimeSeconds);
+            TimeDisplay = $"{cur:mm\\:ss} / {tot:mm\\:ss}";
+        }
+
+        public void SeekTo(double seconds)
+        {
+            SeekRequested?.Invoke(this, seconds);
+        }
+
         /// <summary>Sollevato quando l'utente muove lo slider del volume individuale.</summary>
         public event System.EventHandler<double>? VolumeChanged;
 
         /// <summary>Sollevato quando l'utente attiva/disattiva il mute.</summary>
         public event System.EventHandler<bool>? MuteChanged;
+
+        /// <summary>Sollevato quando l'utente effettua un seek manuale sulla clip.</summary>
+        public event System.EventHandler<double>? SeekRequested;
     }
 }

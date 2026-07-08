@@ -138,9 +138,16 @@
 
         <CheckBox x:Name="StartWithWindowsCheckBox"
                   Content="Avvia SoundBoard con Windows"
-                  Margin="0,0,0,20"
+                  Margin="0,0,0,10"
                   Checked="StartWithWindowsCheckBox_Changed"
                   Unchecked="StartWithWindowsCheckBox_Changed"
+                  Foreground="#F1F2F6"/>
+
+        <CheckBox x:Name="NormalizeAudioCheckBox"
+                  Content="Normalizza volume audio delle clip (evita suoni troppo alti o bassi)"
+                  Margin="0,0,0,20"
+                  Checked="NormalizeAudioCheckBox_Changed"
+                  Unchecked="NormalizeAudioCheckBox_Changed"
                   Foreground="#F1F2F6"/>
 
         <TextBlock Text="Le impostazioni vengono salvate automaticamente."
