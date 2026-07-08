@@ -476,6 +476,21 @@ namespace SoundBoard.ViewModels
             {
                 if (_settings.UseVirtualDriver == value) return;
                 _settings.UseVirtualDriver = value;
+                
+                if (value)
+                {
+                    // Forza l'output amici sul driver virtuale (rinominato o generico) per assicurare che il loopback si avvii
+                    var devices = GetOutputDevices();
+                    var virtualDev = devices.FirstOrDefault(d => 
+                        d.Name != null && (
+                        d.Name.Contains("ThePixelSoundboard Audio", StringComparison.OrdinalIgnoreCase) || 
+                        d.Name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase)));
+                    if (virtualDev != null)
+                    {
+                        _settings.OutputFriendsDeviceId = virtualDev.Id;
+                    }
+                }
+                
                 _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, value ? _settings.InputMicrophoneDeviceId : null, MasterVolume);
                 SaveState();
                 OnPropertyChanged(nameof(UseVirtualDriver));
@@ -541,20 +556,20 @@ namespace SoundBoard.ViewModels
                 var target = renamedTarget ?? genericTarget;
                 if (target != null)
                 {
-                    // Auto-imposta il driver virtuale come output amici solo se non è già configurato altro
-                    if (string.IsNullOrEmpty(_settings.OutputFriendsDeviceId))
+                    // Se la modalità driver virtuale è attiva o era attiva, assicuriamo che l'output amici punti al driver virtuale
+                    if (_settings.UseVirtualDriver || string.IsNullOrEmpty(_settings.OutputFriendsDeviceId))
                     {
                         _settings.OutputFriendsDeviceId = target.Id;
                     }
                     
-                    // Auto-attiva la modalità driver virtuale solo se rileviamo la versione rinominata (installazione con driver)
+                    // Auto-attiva la modalità driver virtuale se rileviamo la versione rinominata per la prima volta
                     if (renamedTarget != null && !_settings.UseVirtualDriver && string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))
                     {
                         _settings.UseVirtualDriver = true;
                     }
-                    else if (renamedTarget == null)
+                    else if (renamedTarget == null && genericTarget == null)
                     {
-                        // Se il driver ufficiale non è installato/attivo, disattiva forzatamente la modalità driver
+                        // Disattiva solo se non c'è NESSUN driver (né generico né rinominato)
                         _settings.UseVirtualDriver = false;
                     }
                     
