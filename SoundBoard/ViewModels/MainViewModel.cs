@@ -184,11 +184,33 @@ namespace SoundBoard.ViewModels
 
         public void ImportFile(string path)
         {
-            var ext = Path.GetExtension(path).ToLowerInvariant();
-            if (!SupportedExtensions.Contains(ext) || !File.Exists(path)) return;
+            if (System.IO.Directory.Exists(path))
+            {
+                try
+                {
+                    var files = System.IO.Directory.GetFiles(path, "*.*", System.IO.SearchOption.AllDirectories)
+                        .Where(f => SupportedExtensions.Contains(System.IO.Path.GetExtension(f).ToLowerInvariant()))
+                        .OrderBy(f => f)
+                        .ToList();
+
+                    foreach (var file in files)
+                    {
+                        ImportFile(file);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Errore durante l'importazione della cartella:\n{ex.Message}", "SoundBoard",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+                return;
+            }
+
+            var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            if (!SupportedExtensions.Contains(ext) || !System.IO.File.Exists(path)) return;
             var model = new SoundButtonModel
             {
-                Name = Path.GetFileNameWithoutExtension(path),
+                Name = System.IO.Path.GetFileNameWithoutExtension(path),
                 FilePath = path,
                 FolderId = SelectedFolder?.Id ?? "root",
                 Color = PickRandomColor()
@@ -242,6 +264,36 @@ namespace SoundBoard.ViewModels
             AllButtons.Remove(vm);
             FilteredButtons.Remove(vm);
             _settings.Buttons.RemoveAll(b => b.Id == vm.Id);
+            SaveState();
+        }
+
+        public void StopAll()
+        {
+            try
+            {
+                StopSequence();
+                var playing = PlayingSounds.ToList();
+                foreach (var vm in playing)
+                {
+                    Stop(vm);
+                }
+                StopPreview();
+            }
+            catch { }
+        }
+
+        public void ClearAllSounds()
+        {
+            StopAll();
+            foreach (var vm in AllButtons)
+            {
+                _hotkeyManager.Unregister(vm.Id);
+            }
+            AllButtons.Clear();
+            FilteredButtons.Clear();
+            _settings.Buttons.Clear();
+            History.Clear();
+            PlayingSounds.Clear();
             SaveState();
         }
 

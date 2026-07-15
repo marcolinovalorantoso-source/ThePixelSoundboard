@@ -140,7 +140,10 @@
         </StackPanel>
 
         <TextBlock Text="Le impostazioni vengono salvate automaticamente."
-                   Foreground="#F1F2F6" FontStyle="Italic" Margin="0,0,0,16"/>
+                   Foreground="#F1F2F6" FontStyle="Italic" Margin="0,0,0,10"/>
+
+        <Button Content="📁 Apri Cartella Dati e Impostazioni" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
+                HorizontalAlignment="Left" Padding="12,6" Margin="0,0,0,16" Click="OpenDataFolder_Click"/>
 
         <!-- Versione -->
         <Border Background="#2A2E3A" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">

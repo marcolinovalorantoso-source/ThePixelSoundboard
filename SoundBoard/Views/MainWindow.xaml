@@ -619,6 +619,16 @@
                             </StackPanel>
                         </Button>
 
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="ClearAllSoundsButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🗑️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="Svuota Soundboard" FontWeight="SemiBold" Foreground="#FF6B6B" FontSize="13"/>
+                                    <TextBlock Text="Rimuovi tutti i suoni caricati" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+
                         <!-- Scheda Statistiche -->
                         <Border Background="#161B26" BorderBrush="#252F42" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,24,0,0">
                             <StackPanel>

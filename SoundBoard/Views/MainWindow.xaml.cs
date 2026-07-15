@@ -415,5 +415,16 @@ namespace SoundBoard.Views
             };
             DrawerTransform.BeginAnimation(TranslateTransform.XProperty, slideAnim);
         }
+
+        private void ClearAllSoundsButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseDrawer();
+            var res = MessageBox.Show("Sei sicuro di voler svuotare la soundboard? Questa azione rimuoverà tutti i suoni salvati.",
+                "Svuota Soundboard", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (res == MessageBoxResult.Yes)
+            {
+                _viewModel.ClearAllSounds();
+            }
+        }
     }
 }

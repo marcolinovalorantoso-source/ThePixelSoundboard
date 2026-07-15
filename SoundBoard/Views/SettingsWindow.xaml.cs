@@ -198,5 +198,22 @@ namespace SoundBoard.Views
                 LoadSettings();
             }
         }
+
+        private void OpenDataFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var folder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                if (System.IO.Directory.Exists(folder))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", folder);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Impossibile aprire la cartella dati:\n{ex.Message}", "SoundBoard",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }
