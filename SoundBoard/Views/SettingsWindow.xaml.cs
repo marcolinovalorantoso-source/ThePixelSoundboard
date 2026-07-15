@@ -121,6 +121,8 @@ namespace SoundBoard.Views
                                     _viewModel.SelectedOutputMeDeviceId = ((AudioOutputDevice)OutputMeComboBox.SelectedItem).Id;
                                 }
 
+                                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.StopAllHotkeyGesture) ? "Nessuna" : _viewModel.StopAllHotkeyGesture;
+
                                 OutputFriendsComboBox.IsEnabled = true;
                                 OutputMeComboBox.IsEnabled = true;
                             }
@@ -182,6 +184,16 @@ namespace SoundBoard.Views
             double val = NormalizeDbSlider.Value;
             NormalizeDbValueText.Text = $"{val:F1} dB";
             _viewModel.NormalizeLoudnessDb = val;
+        }
+
+        private void AssignStopAllHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new HotkeyCaptureWindow(_viewModel.StopAllHotkeyGesture) { Owner = this };
+            if (dialog.ShowDialog() == true)
+            {
+                _viewModel.StopAllHotkeyGesture = dialog.ResultGesture;
+                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? "Nessuna" : dialog.ResultGesture;
+            }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)

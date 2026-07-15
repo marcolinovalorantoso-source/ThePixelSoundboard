@@ -74,6 +74,40 @@ namespace SoundBoard.Views
 
         #region Interazioni pulsanti suono (doppio click = rinomina/modifica, click destro = menu)
 
+        private Point _dragStartPoint;
+
+        private void SoundTile_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _dragStartPoint = e.GetPosition(null);
+        }
+
+        private void SoundTile_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element && element.DataContext is SoundButtonViewModel vm)
+            {
+                Point mousePos = e.GetPosition(null);
+                Vector diff = _dragStartPoint - mousePos;
+
+                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    DragDrop.DoDragDrop(element, new DataObject("SoundButtonViewModel", vm), DragDropEffects.Move);
+                }
+            }
+        }
+
+        private void SoundTile_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("SoundButtonViewModel") && sender is FrameworkElement element && element.DataContext is SoundButtonViewModel targetVm)
+            {
+                var sourceVm = e.Data.GetData("SoundButtonViewModel") as SoundButtonViewModel;
+                if (sourceVm != null && sourceVm != targetVm)
+                {
+                    _viewModel.ReorderSound(sourceVm, targetVm);
+                }
+            }
+        }
+
         private void SoundTile_Click(object sender, MouseButtonEventArgs e)
         {
             if (sender is FrameworkElement { DataContext: SoundButtonViewModel vm })

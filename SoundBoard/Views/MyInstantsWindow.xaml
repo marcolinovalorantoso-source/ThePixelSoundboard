@@ -124,11 +124,16 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBox x:Name="SearchTextBox" Grid.Column="0" FontSize="14" Padding="10,8" 
                          Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource TextPrimaryBrush}" 
                          BorderBrush="#3A3F4E" BorderThickness="1" KeyDown="SearchTextBox_KeyDown"/>
+                
+                <Button Grid.Column="1" Content="📁 Apri Cartella Download" Style="{StaticResource FlatButton}" 
+                        Background="#2A2E3A" Foreground="#F1F2F6" Padding="12,6" Margin="8,0,0,0" Click="OpenDownloadFolder_Click"
+                        ToolTip="Apre la cartella locale dove vengono salvati temporaneamente i suoni scaricati."/>
                 
                 <!-- Placeholder Text (Cerca...) -->
                 <TextBlock IsHitTestVisible="False" Text="🔍 Cerca un suono online..." VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14">

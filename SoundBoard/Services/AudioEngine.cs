@@ -468,7 +468,7 @@ namespace SoundBoard.Services
             }
         }
 
-        private static float GetPeakVolume(WaveStream stream)
+        private static float GetPeakVolume(WaveStream stream, int maxSeconds = 15)
         {
             try
             {
@@ -478,6 +478,11 @@ namespace SoundBoard.Services
                 float max = 0;
                 float[] buffer = new float[4096];
                 int read;
+                
+                // Limite massimo campioni da leggere per non bloccare l'UI sui file lunghi
+                int maxSamples = maxSeconds * sampleProvider.WaveFormat.SampleRate * sampleProvider.WaveFormat.Channels;
+                int totalSamplesRead = 0;
+
                 while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     for (int i = 0; i < read; i++)
@@ -485,6 +490,8 @@ namespace SoundBoard.Services
                         var abs = Math.Abs(buffer[i]);
                         if (abs > max) max = abs;
                     }
+                    totalSamplesRead += read;
+                    if (totalSamplesRead >= maxSamples) break;
                 }
                 stream.Position = originalPosition;
                 return max;
@@ -513,10 +520,10 @@ namespace SoundBoard.Services
 
             WaveStream readerMe = OpenReader(filePath);
 
-            if (normalize && readerMe.TotalTime.TotalSeconds < 60)
+            if (normalize)
             {
-                // Calcoliamo il peak usando il reader locale solo per file corti (clip) per evitare delay su file lunghi
-                float peak = GetPeakVolume(readerMe);
+                // Calcoliamo il peak stimando sui primi 15 secondi per evitare freeze su file molto lunghi
+                float peak = GetPeakVolume(readerMe, 15);
                 if (peak > 0.01f)
                 {
                     float targetLinear = (float)Math.Pow(10.0, normalizeDb / 20.0);

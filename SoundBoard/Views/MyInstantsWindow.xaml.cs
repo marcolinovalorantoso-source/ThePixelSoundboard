@@ -378,6 +378,21 @@ namespace SoundBoard.Views
                 }
             }
         }
+
+        private void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                var destFolder = Path.Combine(appDataFolder, "Sounds");
+                Directory.CreateDirectory(destFolder);
+                System.Diagnostics.Process.Start("explorer.exe", destFolder);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Impossibile aprire la cartella: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     public class MyInstantUIItem : System.ComponentModel.INotifyPropertyChanged

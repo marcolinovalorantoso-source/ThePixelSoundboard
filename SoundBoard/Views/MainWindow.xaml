@@ -21,7 +21,10 @@
         <DataTemplate x:Key="SoundTileTemplate" DataType="{x:Type vm:SoundButtonViewModel}">
             <Border Width="140" Height="100" Margin="6" CornerRadius="10"
                     Background="{Binding Color, Converter={StaticResource HexColorToBrush}}"
-                    MouseLeftButtonUp="SoundTile_Click" Cursor="Hand" RenderTransformOrigin="0.5,0.5">
+                    MouseLeftButtonUp="SoundTile_Click" Cursor="Hand" RenderTransformOrigin="0.5,0.5"
+                    AllowDrop="True" Drop="SoundTile_Drop" 
+                    PreviewMouseLeftButtonDown="SoundTile_PreviewMouseLeftButtonDown" 
+                    PreviewMouseMove="SoundTile_PreviewMouseMove">
                 <Border.RenderTransform>
                     <ScaleTransform ScaleX="1" ScaleY="1"/>
                 </Border.RenderTransform>

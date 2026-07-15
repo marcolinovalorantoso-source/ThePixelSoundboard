@@ -44,6 +44,9 @@ namespace SoundBoard.Models
         public double WindowWidth { get; set; } = 1200;
         public double WindowHeight { get; set; } = 750;
 
+        /// <summary>Hotkey globale per fermare tutti i suoni.</summary>
+        public string? StopAllHotkeyGesture { get; set; } = null;
+
         /// <summary>Indica se l'utente ha completato il tutorial/setup iniziale.</summary>
         public bool IsOnboarded { get; set; } = false;
     }

@@ -267,6 +267,43 @@ namespace SoundBoard.ViewModels
             SaveState();
         }
 
+        public void ReorderSound(SoundButtonViewModel source, SoundButtonViewModel target)
+        {
+            int sourceIndexAll = AllButtons.IndexOf(source);
+            int targetIndexAll = AllButtons.IndexOf(target);
+
+            if (sourceIndexAll >= 0 && targetIndexAll >= 0)
+            {
+                AllButtons.Move(sourceIndexAll, targetIndexAll);
+                
+                var sourceModel = _settings.Buttons.FirstOrDefault(b => b.Id == source.Id);
+                var targetModel = _settings.Buttons.FirstOrDefault(b => b.Id == target.Id);
+                
+                if (sourceModel != null && targetModel != null)
+                {
+                    int sourceModelIndex = _settings.Buttons.IndexOf(sourceModel);
+                    int targetModelIndex = _settings.Buttons.IndexOf(targetModel);
+                    
+                    if (sourceModelIndex >= 0 && targetModelIndex >= 0)
+                    {
+                        _settings.Buttons.RemoveAt(sourceModelIndex);
+                        // If moving down, the index shifts after removal
+                        if (sourceModelIndex < targetModelIndex) targetModelIndex--;
+                        _settings.Buttons.Insert(targetModelIndex, sourceModel);
+                    }
+                }
+
+                int sourceIndexFiltered = FilteredButtons.IndexOf(source);
+                int targetIndexFiltered = FilteredButtons.IndexOf(target);
+                if (sourceIndexFiltered >= 0 && targetIndexFiltered >= 0)
+                {
+                    FilteredButtons.Move(sourceIndexFiltered, targetIndexFiltered);
+                }
+
+                SaveState();
+            }
+        }
+
         public void StopAll()
         {
             try
@@ -481,6 +518,17 @@ namespace SoundBoard.ViewModels
             _hotkeyManager.AttachToWindow(window);
             foreach (var vm in AllButtons)
                 RegisterHotkeyIfPresent(vm);
+            RegisterStopAllHotkey();
+        }
+
+        private void RegisterStopAllHotkey()
+        {
+            _hotkeyManager.Unregister("GLOBAL_STOP_ALL");
+            if (!string.IsNullOrEmpty(StopAllHotkeyGesture))
+            {
+                _hotkeyManager.Register("GLOBAL_STOP_ALL", StopAllHotkeyGesture, () =>
+                    Application.Current?.Dispatcher.Invoke(() => StopAll()));
+            }
         }
 
         private double _masterVolume;
@@ -582,6 +630,19 @@ namespace SoundBoard.ViewModels
                 _settings.NormalizeAudio = value;
                 SaveState();
                 OnPropertyChanged(nameof(NormalizeAudio));
+            }
+        }
+
+        public string? StopAllHotkeyGesture
+        {
+            get => _settings.StopAllHotkeyGesture;
+            set
+            {
+                if (_settings.StopAllHotkeyGesture == value) return;
+                _settings.StopAllHotkeyGesture = value;
+                RegisterStopAllHotkey();
+                SaveState();
+                OnPropertyChanged(nameof(StopAllHotkeyGesture));
             }
         }
 
