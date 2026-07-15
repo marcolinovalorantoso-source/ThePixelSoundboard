@@ -2,12 +2,12 @@
 
 <div align="center">
 
-**La soundboard definitiva per i ThePixelBoys — con driver audio virtuale integrato**
+**La soundboard definitiva per i ThePixelBoys — Semplice, leggera e potente**
 
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-blue?logo=windows)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple?logo=dotnet)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.0.0-orange)
+![Version](https://img.shields.io/badge/Version-2.5.0-orange)
 
 </div>
 
@@ -22,22 +22,22 @@
 | 🎵 **Drag & Drop** | Importa `.mp3`, `.wav`, `.ogg` trascinandoli nella board |
 | 🎨 **Personalizzazione Totale** | Colore, emoji, icona e nome per ogni suono |
 | ⌨️ **Global Hotkeys** | Tasti rapidi che funzionano anche in gioco a schermo intero |
-| 🎧 **Driver Audio Virtuale** | Mix in tempo reale di voce + meme su Discord (come Soundpad!) |
+| 🎧 **Configurazione Audio** | Supporta cuffie, VB-Cable per Discord e microfono di loopback |
 | 📂 **Cartelle** | Organizza i suoni in cartelle separate |
 | 🚀 **Bassa Latenza** | Motore audio NAudio con overlay fluido dei suoni |
 
 ---
 
-## 🎙️ Come funziona il Driver Audio Virtuale?
+## 🎙️ Come funziona il routing audio su Discord?
 
-ThePixelSoundboard funziona **esattamente come Soundpad**: installa un driver audio virtuale (canale ponte) che permette ai tuoi amici su Discord di sentire **sia la tua voce che i meme** contemporaneamente.
+ThePixelSoundboard funziona misando l'audio della soundboard e la tua voce in un cavo virtuale (es. VB-Cable) che puoi impostare come microfono su Discord.
 
 ```
 [Microfono Reale] ──┐
-                    ├──► [ThePixelSoundboard Mixer] ──► [ThePixelSoundboard Audio (Virtual)]
+                    ├──► [ThePixelSoundboard Mixer] ──► [Cavo Virtuale (es. CABLE Input)]
 [Suoni Soundboard] ─┘                                            │
                                                                  ▼
-                                              [Discord legge "ThePixelSoundboard Mic"]
+                                                  [Discord legge "CABLE Output"]
                                                                  │
                                                                  ▼
                                                       👥 I tuoi amici sentono tutto!
@@ -45,30 +45,17 @@ ThePixelSoundboard funziona **esattamente come Soundpad**: installa un driver au
 
 ---
 
-## 📥 Installazione
+## 📥 Installazione e Configurazione
 
-### Versione Consigliata (con Driver Audio)
-1. Scarica `ThePixelSoundboard_Setup.exe` dalla sezione [**Releases**](../../releases)
-2. Avvia il setup e scegli **"Installazione completa (con Driver Audio Virtuale)"**
-3. Accetta il permesso amministratore (richiesto per il driver)
-4. Riavvia il PC
-5. Apri Discord → Impostazioni → Voce e video → Seleziona **"ThePixelSoundboard Mic"** come microfono
+1. Scarica `ThePixelSoundboard_v2.5.0_Setup.exe` dalla sezione [**Releases**](../../releases).
+2. Esegui l'installazione guidata sul tuo PC.
+3. Al primo avvio, l'**Onboarding Setup Wizard** ti aiuterà a configurare in pochi secondi:
+   - Il tuo dispositivo di ascolto principale (le tue cuffie).
+   - Il cavo virtuale (es. CABLE Input / VB-Cable) per trasmettere ai tuoi amici.
+   - Il tuo microfono reale per il loopback della voce.
+4. Su Discord → Impostazioni → Voce e video → Imposta come dispositivo di ingresso lo stesso cavo virtuale (es. CABLE Output).
 
-### Versione Libera (senza Driver)
-1. Scarica `ThePixelSoundboard_Setup.exe` dalla sezione [**Releases**](../../releases)
-2. Scegli **"Installazione libera (senza Driver)"**
-3. Nelle impostazioni dell'app, seleziona manualmente i due output audio
-
----
-
-## ⚙️ Impostazioni Audio
-
-| Con Driver Virtuale | Senza Driver |
-|---|---|
-| ✅ Driver rilevato automaticamente | ⚠️ Nessun driver |
-| 🎧 Output → Tue cuffie | 🎧 Output → Tue cuffie |
-| 🎤 Input → Tuo microfono reale | 🎧 Output Amici → Selezione manuale |
-| 💬 Guida Discord integrata | — |
+*Se sei un utente esperto, puoi saltare l'introduzione guidata usando il tasto dedicato **"Sono un Esperto"** per andare subito alla selezione dei dispositivi.*
 
 ---
 
@@ -81,7 +68,7 @@ ThePixelSoundboard funziona **esattamente come Soundpad**: installa un driver au
 
 ### Build
 ```bash
-git clone https://github.com/TUO_USERNAME/ThePixelSoundboard.git
+git clone https://github.com/marcolinovalorantoso-source/ThePixelSoundboard.git
 cd ThePixelSoundboard
 dotnet build SoundBoard/SoundBoard.csproj
 dotnet run --project SoundBoard/SoundBoard.csproj
@@ -105,12 +92,9 @@ ThePixelSoundboard/
 ├── SoundBoard/                  # Progetto principale WPF
 │   ├── Models/                  # Modelli dati (AppSettings, SoundButton, ecc.)
 │   ├── ViewModels/              # ViewModel principale (MVVM)
-│   ├── Views/                   # Finestre XAML (Main, Settings, Recorder, ecc.)
+│   ├── Views/                   # Finestre XAML (Main, Settings, Onboarding, ecc.)
 │   ├── Services/                # AudioEngine, SettingsService, StartupService
 │   └── app_icon.ico             # Icona dell'applicazione
-├── installer/                   # File per l'installer
-│   ├── vbcable/                 # Driver VB-Cable (incluso nella versione completa)
-│   └── rename_device.ps1        # Script rinominazione dispositivi audio
 ├── installer.iss                # Script Inno Setup
 ├── .gitignore
 └── README.md
@@ -123,7 +107,6 @@ ThePixelSoundboard/
 - **C# / WPF (.NET 8)** — UI nativa Windows con MVVM
 - **NAudio** — Motore audio: mixing, playback, registrazione, loopback
 - **NVorbis** — Supporto file `.ogg`
-- **VB-Audio Virtual Cable** — Driver audio virtuale (incluso nell'installer completo)
 - **Inno Setup 6** — Wizard di installazione
 
 ---
