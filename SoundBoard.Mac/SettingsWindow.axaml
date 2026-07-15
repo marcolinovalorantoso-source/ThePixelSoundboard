@@ -1,0 +1,70 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:SoundBoard.ViewModels"
+        x:Class="SoundBoard.Mac.SettingsWindow"
+        Title="Impostazioni"
+        Width="500" Height="450"
+        WindowStartupLocation="CenterOwner"
+        Background="#1B1D23"
+        x:DataType="vm:MainViewModel">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="⚙️ Impostazioni Audio" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,20"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="15">
+                <!-- Monitoraggio (Cuffie) -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Monitoraggio Audio (Cuffie/Speaker):" Foreground="#9AA0AE" FontSize="12" FontWeight="SemiBold"/>
+                    <ComboBox ItemsSource="{Binding OutputDevices}"
+                              SelectedValue="{Binding SelectedOutputMeDeviceId}"
+                              SelectedValueBinding="{Binding Id}"
+                              DisplayMemberBinding="{Binding Name}"
+                              HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <!-- Riproduzione per gli Amici (Virtual Cable) -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Uscita per gli Amici (Cavo Audio Virtuale):" Foreground="#9AA0AE" FontSize="12" FontWeight="SemiBold"/>
+                    <ComboBox ItemsSource="{Binding OutputDevices}"
+                              SelectedValue="{Binding SelectedOutputFriendsDeviceId}"
+                              SelectedValueBinding="{Binding Id}"
+                              DisplayMemberBinding="{Binding Name}"
+                              HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <!-- Volume Master -->
+                <StackPanel Spacing="5">
+                    <Grid>
+                        <TextBlock Text="Volume Master:" Foreground="#9AA0AE" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding MasterVolume, StringFormat={}{0:P0}}" Foreground="#5BE56B" FontSize="12" FontWeight="Bold" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Slider Minimum="0" Maximum="1" Value="{Binding MasterVolume}"/>
+                </StackPanel>
+
+                <!-- Apri Cartella Dati -->
+                <Button Content="📁 Apri Cartella Dati e Impostazioni" 
+                        Click="OpenDataFolder_Click"
+                        Background="#2A2E3A" Foreground="White"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10"/>
+
+                <!-- Ripeti Configurazione Guidata -->
+                <Button Content="⚙️ Ripeti Configurazione Iniziale"
+                        Click="ResetOnboarding_Click"
+                        Background="#3498DB" Foreground="White"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Chiudi -->
+        <Button Grid.Row="2" Content="Chiudi" Click="Close_Click" 
+                Background="#2A2E3A" Foreground="White" 
+                HorizontalAlignment="Right" Padding="15,8" Margin="0,15,0,0"/>
+    </Grid>
+</Window>

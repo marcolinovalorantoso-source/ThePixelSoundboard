@@ -1,0 +1,157 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:SoundBoard.ViewModels"
+        x:Class="SoundBoard.Mac.MainWindow"
+        Title="ThePixelSoundboard — Mac Edition"
+        Width="1000" Height="700"
+        Background="#1B1D23"
+        WindowStartupLocation="CenterScreen"
+        DragDrop.AllowDrop="True"
+        x:DataType="vm:MainViewModel">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Left Sidebar -->
+            <ColumnDefinition Width="220"/>
+            <!-- Main Content Area -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Grid.RowDefinitions>
+            <!-- Content Area -->
+            <RowDefinition Height="*"/>
+            <!-- Bottom Mixer Area -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- LEFT SIDEBAR -->
+        <Border Grid.RowSpan="2" Background="#16181C" BorderBrush="#25272F" BorderThickness="0,0,1,0">
+            <Grid Margin="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo / Title -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="ThePixelSoundboard" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Versione macOS" FontSize="10" Foreground="#5BE56B"/>
+                </StackPanel>
+
+                <!-- Tools Navigation Buttons -->
+                <StackPanel Grid.Row="1" Margin="0,30,0,0" Spacing="8">
+                    <!-- Impostazioni -->
+                    <Button Click="OpenSettings_Click" HorizontalAlignment="Stretch" Padding="12" Background="#232731">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⚙️"/>
+                            <TextBlock Text="Impostazioni" FontWeight="SemiBold" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Svuota Board -->
+                    <Button Click="ClearAll_Click" HorizontalAlignment="Stretch" Padding="12" Background="#232731">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🗑️"/>
+                            <TextBlock Text="Svuota Soundboard" FontWeight="SemiBold" Foreground="#FF6B6B"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Info footer -->
+                <StackPanel Grid.Row="2" Spacing="5">
+                    <TextBlock Text="Trascina qui cartelle o file audio per importarli!" FontSize="11" Foreground="#9AA0AE" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- MAIN AREA -->
+        <Grid Grid.Column="1" Margin="20" RowDefinitions="Auto,*">
+            <!-- Search bar -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,15">
+                <TextBox Text="{Binding SearchText, Mode=TwoWay}" Watermark="Cerca un suono..." Background="#232731" BorderThickness="0" CornerRadius="8" Padding="10"/>
+                <Button Grid.Column="1" Content="Stop Tutti" Click="StopAll_Click" Background="#E74C3C" Foreground="White" FontWeight="Bold" Margin="10,0,0,0" Padding="12,8"/>
+            </Grid>
+
+            <!-- Sound Tiles Grid -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding FilteredButtons}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SoundButtonViewModel">
+                            <!-- Custom Sound Tile -->
+                             <Button Margin="6" Width="140" Height="100" 
+                                    Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).PlayCommand}"
+                                    CommandParameter="{Binding}"
+                                    Background="{Binding Color}"
+                                    CornerRadius="10">
+                                 <Button.ContextMenu>
+                                     <ContextMenu>
+                                         <MenuItem Header="Elimina" 
+                                                   Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).DeleteButtonCommand}"
+                                                   CommandParameter="{Binding}"/>
+                                     </ContextMenu>
+                                 </Button.ContextMenu>
+                                 <Grid RowDefinitions="*,Auto" Margin="5">
+                                     <!-- Play/Pause indicators -->
+                                     <TextBlock Text="▶️" FontSize="14" HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                IsVisible="{Binding IsPlaying}"/>
+                                     
+                                     <!-- Sound Title -->
+                                     <TextBlock Grid.Row="1" Text="{Binding Name}" FontWeight="Bold" FontSize="12" Foreground="White" 
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextAlignment="Center"/>
+                                 </Grid>
+                             </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- BOTTOM MIXER AREA -->
+        <Border Grid.Row="1" Grid.Column="1" Background="#16181C" BorderBrush="#25272F" BorderThickness="0,1,0,0" Padding="15">
+            <Grid ColumnDefinitions="*,200">
+                <!-- Active Playing sounds list -->
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding PlayingSounds}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="15"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SoundButtonViewModel">
+                                <!-- Mixer strip for active playing sound -->
+                                <Border Background="#232731" BorderBrush="#2A2E38" BorderThickness="1" CornerRadius="8" Padding="10" Width="220">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+                                        <!-- Title -->
+                                        <TextBlock Grid.ColumnSpan="3" Text="{Binding Name}" FontWeight="Bold" FontSize="11" Foreground="White" TextTrimming="CharacterEllipsis" Margin="0,0,0,5"/>
+                                        
+                                        <!-- Play/Pause & Mute controls -->
+                                        <Button Grid.Row="1" Content="⏸️" Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).TogglePauseCommand}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="4"/>
+                                        <Slider Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Volume}" Margin="8,0"/>
+                                        <Button Grid.Row="1" Grid.Column="2" Content="🔇" Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).ToggleMuteCommand}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="4"/>
+
+                                        <!-- Progress Bar / Time display -->
+                                        <ProgressBar Grid.Row="2" Grid.ColumnSpan="2" Minimum="0" Maximum="100" Value="{Binding CurrentTimeSeconds}" IsIndeterminate="False" Margin="0,5,0,0" Height="4"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding TimeDisplay}" FontSize="9" Foreground="#9AA0AE" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,0,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Master volume control -->
+                <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="15,0,0,0">
+                    <TextBlock Text="Volume Master" Foreground="#9AA0AE" FontSize="11" HorizontalAlignment="Center"/>
+                    <Slider Grid.Row="1" Minimum="0" Maximum="1" Value="{Binding MasterVolume}" VerticalAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
