@@ -20,13 +20,14 @@ namespace SoundBoard.Models
         
         /// <summary>ID del dispositivo di output audio per te (cuffie/speaker). Null = predefinito di sistema.</summary>
         public string? OutputMeDeviceId { get; set; } = "0"; // Realtek HD Audio 2nd output
-
         /// <summary>ID del dispositivo di input per il microfono reale. Null = disattivato.</summary>
         public string? InputMicrophoneDeviceId { get; set; } = null;
 
         /// <summary>Se true, utilizza il driver virtuale (input/output) anziché i 2 output.</summary>
         public bool UseVirtualDriver { get; set; } = false;
-
+        
+        /// <summary>Volume per l'anteprima dei suoni online (range 0.0 - 1.0).</summary>
+        public double PreviewVolume { get; set; } = 1.0;
         /// <summary>Se true, normalizza l'audio delle clip al picco massimo durante la riproduzione.</summary>
         public bool NormalizeAudio { get; set; } = false;
 
@@ -42,5 +43,8 @@ namespace SoundBoard.Models
         /// <summary>Larghezza/altezza finestra salvate per riapertura.</summary>
         public double WindowWidth { get; set; } = 1200;
         public double WindowHeight { get; set; } = 750;
+
+        /// <summary>Indica se l'utente ha completato il tutorial/setup iniziale.</summary>
+        public bool IsOnboarded { get; set; } = false;
     }
 }

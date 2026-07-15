@@ -79,62 +79,41 @@
         </Style>
     </Window.Resources>
 
-    <StackPanel Margin="20">
+    <Grid x:Name="MainRootGrid" Opacity="0">
+        <Grid.RenderTransform>
+            <TranslateTransform x:Name="WindowTransform" Y="30"/>
+        </Grid.RenderTransform>
 
-        <!-- Stato Driver Virtuale -->
-        <Border x:Name="DriverStatusBorder" CornerRadius="8" Padding="14,12" Margin="0,0,0,20">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="DriverStatusIcon" Text="🎙️" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <StackPanel>
-                        <TextBlock x:Name="DriverStatusTitle" FontSize="13" FontWeight="Bold" Foreground="#F1F2F6"/>
-                        <TextBlock x:Name="DriverStatusSubtitle" FontSize="11" Foreground="#9AA0AE" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </StackPanel>
-            </StackPanel>
-        </Border>
+        <Grid.Triggers>
+            <EventTrigger RoutedEvent="Grid.Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="WindowTransform"
+                                         Storyboard.TargetProperty="Y"
+                                         From="30" To="0" Duration="0:0:0.35"
+                                         DecelerationRatio="0.9"/>
+                        <DoubleAnimation Storyboard.TargetName="MainRootGrid"
+                                         Storyboard.TargetProperty="Opacity"
+                                         From="0" To="1" Duration="0:0:0.25"
+                                         DecelerationRatio="0.9"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Grid.Triggers>
 
-        <!-- Toggle per abilitare/disabilitare manualmente la modalità Driver Virtuale -->
-        <CheckBox x:Name="UseVirtualDriverCheckBox"
-                  Content="Usa Driver Audio Virtuale (Microfono integrato)"
-                  Margin="0,0,0,20"
-                  Checked="UseVirtualDriverCheckBox_Changed"
-                  Unchecked="UseVirtualDriverCheckBox_Changed"
-                  Foreground="#F1F2F6"
-                  FontWeight="Bold"/>
+        <StackPanel Margin="20">
 
-        <!-- Output Amici (nascosto se driver virtuale presente) -->
+        <!-- Output Amici (sempre visibile) -->
         <StackPanel x:Name="FriendsOutputPanel">
-            <TextBlock Text="Dispositivo output (Amici / Discord)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
+            <TextBlock Text="📁  Dispositivo output (Amici / Discord)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
             <ComboBox x:Name="OutputFriendsComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,20"
-                      SelectionChanged="OutputFriendsComboBox_SelectionChanged"/>
+                       SelectionChanged="OutputFriendsComboBox_SelectionChanged"/>
         </StackPanel>
 
         <!-- Output Cuffie (sempre visibile) -->
         <TextBlock Text="🎧  Output (Tue cuffie / Speaker)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
         <ComboBox x:Name="OutputMeComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,20"
                   SelectionChanged="OutputMeComboBox_SelectionChanged"/>
-
-        <!-- Microfono Fisico (visibile solo se driver virtuale presente) -->
-        <StackPanel x:Name="PhysicalMicPanel" Visibility="Collapsed">
-            <TextBlock Text="🎤  Tuo microfono reale (Input)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
-            <ComboBox x:Name="InputMicComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,20"
-                      SelectionChanged="InputMicComboBox_SelectionChanged"/>
-        </StackPanel>
-
-        <!-- Info Discord (visibile solo se driver presente) -->
-        <Border x:Name="DiscordInfoBorder" Background="#1E3A5F" CornerRadius="8" Padding="14,12" Margin="0,0,0,20" Visibility="Collapsed">
-            <StackPanel>
-                <TextBlock Text="💬  Come usare su Discord" FontSize="12" FontWeight="Bold" Foreground="#5B9CF6" Margin="0,0,0,6"/>
-                <TextBlock TextWrapping="Wrap" Foreground="#9AA0AE" FontSize="11">
-                    <Run>Apri le Impostazioni di Discord → Voce e video → </Run>
-                    <Run FontWeight="Bold" Foreground="#F1F2F6">Dispositivo di input</Run>
-                    <Run> e seleziona </Run>
-                    <Run FontWeight="Bold" Foreground="#5BE56B" x:Name="DiscordMicNameRun">ThePixelSoundboard Mic</Run>
-                    <Run>. I tuoi amici sentiranno sia la tua voce che i suoni della board!</Run>
-                </TextBlock>
-            </StackPanel>
-        </Border>
 
         <CheckBox x:Name="StartWithWindowsCheckBox"
                   Content="Avvia SoundBoard con Windows"
@@ -156,7 +135,7 @@
                 <TextBlock Text="Volume target normalizzazione:" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold"/>
                 <TextBlock x:Name="NormalizeDbValueText" Text="-1.0 dB" Foreground="#5BE56B" FontSize="11" FontWeight="Bold" Margin="8,0,0,0"/>
             </StackPanel>
-            <Slider x:Name="NormalizeDbSlider" Minimum="-12" Maximum="0" TickFrequency="0.5" IsSnapToTickEnabled="True"
+            <Slider x:Name="NormalizeDbSlider" Minimum="-50" Maximum="0" TickFrequency="1" IsSnapToTickEnabled="True"
                     ValueChanged="NormalizeDbSlider_ValueChanged" />
         </StackPanel>
 
@@ -167,10 +146,15 @@
         <Border Background="#2A2E3A" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="ThePixelSoundboard" FontSize="14" FontWeight="Bold" Foreground="#F1F2F6"/>
-                <TextBlock Text="Versione 1.0.0 — per ThePixelBoys" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
+                <TextBlock Text="Versione 2.5.0 — per ThePixelBoys" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
-        <Button Content="Chiudi" Width="100" HorizontalAlignment="Right" Click="Close_Click"/>
+        <Grid>
+            <Button Content="⚙️ Ripeti Configurazione Iniziale" Style="{StaticResource FlatButton}" Background="#3498DB" Foreground="White"
+                    HorizontalAlignment="Left" Padding="12,6" Click="ResetOnboarding_Click"/>
+            <Button Content="Chiudi" Width="100" HorizontalAlignment="Right" Click="Close_Click"/>
+        </Grid>
     </StackPanel>
+    </Grid>
 </Window>

@@ -58,7 +58,6 @@ namespace SoundBoard.Services
             {
                 settings.OutputMeDeviceId = null;
             }
-
             int inputCount = NAudio.Wave.WaveIn.DeviceCount;
             if (settings.InputMicrophoneDeviceId != null &&
                 int.TryParse(settings.InputMicrophoneDeviceId, out int mic) &&

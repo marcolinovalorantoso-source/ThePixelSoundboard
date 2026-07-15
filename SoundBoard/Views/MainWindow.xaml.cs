@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using SoundBoard.Models;
 using SoundBoard.ViewModels;
 
@@ -32,7 +33,19 @@ namespace SoundBoard.Views
 
             SoundBoard.Services.ThemeService.ApplyDarkTheme(this);
 
-            Loaded += (_, _) => _viewModel.AttachHotkeysToWindow(this);
+            Loaded += async (sender, e) =>
+            {
+                _viewModel.AttachHotkeysToWindow(this);
+                if (!_viewModel.IsOnboarded)
+                {
+                    await System.Threading.Tasks.Task.Delay(350);
+                    var onboarding = new OnboardingWindow(_viewModel) { Owner = this };
+                    if (onboarding.ShowDialog() == true)
+                    {
+                        _viewModel.IsOnboarded = true;
+                    }
+                }
+            };
             Closing += (_, _) =>
             {
                 _viewModel.PersistWindowSize(Width, Height);
@@ -77,6 +90,11 @@ namespace SoundBoard.Views
             if (GetVmFromMenuItem(sender) is { } vm) OpenEditWindow(vm);
         }
 
+        private void TrimMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetVmFromMenuItem(sender) is { } vm) OpenTrimWindow(vm);
+        }
+
         private void HotkeyMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (GetVmFromMenuItem(sender) is not { } vm) return;
@@ -118,6 +136,13 @@ namespace SoundBoard.Views
                 _viewModel.SaveState();
         }
 
+        private void OpenTrimWindow(SoundButtonViewModel vm)
+        {
+            var dialog = new AudioTrimmerWindow(vm, _viewModel) { Owner = this };
+            if (dialog.ShowDialog() == true)
+                _viewModel.SaveState();
+        }
+
         #endregion
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -128,20 +153,39 @@ namespace SoundBoard.Views
 
         private void MyInstantsButton_Click(object sender, RoutedEventArgs e)
         {
+            CloseDrawer();
             var dialog = new MyInstantsWindow(_viewModel) { Owner = this };
             dialog.ShowDialog();
         }
 
         private void TtsButton_Click(object sender, RoutedEventArgs e)
         {
+            CloseDrawer();
             var dialog = new TtsWindow(_viewModel) { Owner = this };
             dialog.ShowDialog();
         }
 
         private void RecorderButton_Click(object sender, RoutedEventArgs e)
         {
+            CloseDrawer();
             var dialog = new RecorderWindow(_viewModel) { Owner = this };
             dialog.ShowDialog();
+        }
+
+        private void OpenSoundsFolder_Click(object sender, RoutedEventArgs e)
+        {
+            CloseDrawer();
+            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+            if (Directory.Exists(folder))
+            {
+                System.Diagnostics.Process.Start("explorer.exe", folder);
+            }
+        }
+
+        private void DrawerItem_Settings_Click(object sender, RoutedEventArgs e)
+        {
+            CloseDrawer();
+            SettingsButton_Click(sender, e);
         }
 
         private void AddFolderButton_Click(object sender, RoutedEventArgs e)
@@ -209,6 +253,20 @@ namespace SoundBoard.Views
         {
             if (sender is FrameworkElement { DataContext: SoundButtonViewModel vm })
                 _viewModel.PlayCommand.Execute(vm);
+        }
+
+        private void ClearHistory_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.History.Clear();
+        }
+
+        private void RemoveFromHistory_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: SoundButtonViewModel vm })
+            {
+                _viewModel.History.Remove(vm);
+                e.Handled = true;
+            }
         }
 
         private string _easterEggBuffer = "";
@@ -303,6 +361,59 @@ namespace SoundBoard.Views
                 vm.IsUserSeeking = false;
                 vm.SeekTo(slider.Value);
             }
+        }
+
+        private void HamburgerButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenDrawer();
+        }
+
+        private void CloseDrawerButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseDrawer();
+        }
+
+        private void DrawerBackdrop_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            CloseDrawer();
+        }
+
+        private void OpenDrawer()
+        {
+            DrawerBackdrop.Visibility = Visibility.Visible;
+            DrawerPanel.Visibility = Visibility.Visible;
+
+            // Fade-in backdrop
+            var fadeAnim = new System.Windows.Media.Animation.DoubleAnimation(0.0, 1.0, TimeSpan.FromSeconds(0.2));
+            DrawerBackdrop.BeginAnimation(OpacityProperty, fadeAnim);
+
+            // Slide-in panel
+            var slideAnim = new System.Windows.Media.Animation.DoubleAnimation(-240, 0, TimeSpan.FromSeconds(0.25))
+            {
+                DecelerationRatio = 0.9
+            };
+            DrawerTransform.BeginAnimation(TranslateTransform.XProperty, slideAnim);
+        }
+
+        private void CloseDrawer()
+        {
+            if (DrawerPanel.Visibility != Visibility.Visible) return;
+
+            // Fade-out backdrop
+            var fadeAnim = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.0, TimeSpan.FromSeconds(0.18));
+            DrawerBackdrop.BeginAnimation(OpacityProperty, fadeAnim);
+
+            // Slide-out panel
+            var slideAnim = new System.Windows.Media.Animation.DoubleAnimation(0, -240, TimeSpan.FromSeconds(0.2))
+            {
+                DecelerationRatio = 0.9
+            };
+            slideAnim.Completed += (s, ev) =>
+            {
+                DrawerBackdrop.Visibility = Visibility.Collapsed;
+                DrawerPanel.Visibility = Visibility.Collapsed;
+            };
+            DrawerTransform.BeginAnimation(TranslateTransform.XProperty, slideAnim);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using SoundBoard.Services;
 using SoundBoard.ViewModels;
 
@@ -17,6 +18,41 @@ namespace SoundBoard.Views
             _viewModel = viewModel;
             SoundBoard.Services.ThemeService.ApplyDarkTheme(this);
             LoadSettings();
+
+            Closing += Window_Closing;
+        }
+
+        private bool _isClosingAnimationCompleted = false;
+        private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (!_isClosingAnimationCompleted)
+            {
+                e.Cancel = true; // Annulla la chiusura immediata
+
+                var grid = MainRootGrid;
+                var transform = WindowTransform;
+
+                // Crea la storyboard di chiusura
+                var sb = new System.Windows.Media.Animation.Storyboard();
+
+                var fadeAnim = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.0, new Duration(System.TimeSpan.FromSeconds(0.18)));
+                System.Windows.Media.Animation.Storyboard.SetTarget(fadeAnim, grid);
+                System.Windows.Media.Animation.Storyboard.SetTargetProperty(fadeAnim, new PropertyPath(Grid.OpacityProperty));
+                sb.Children.Add(fadeAnim);
+
+                var slideAnim = new System.Windows.Media.Animation.DoubleAnimation(0, 30, new Duration(System.TimeSpan.FromSeconds(0.22)));
+                System.Windows.Media.Animation.Storyboard.SetTarget(slideAnim, transform);
+                System.Windows.Media.Animation.Storyboard.SetTargetProperty(slideAnim, new PropertyPath(TranslateTransform.YProperty));
+                sb.Children.Add(slideAnim);
+
+                sb.Completed += (s, ev) =>
+                {
+                    _isClosingAnimationCompleted = true;
+                    Close(); // Chiude definitivamente la finestra
+                };
+
+                sb.Begin();
+            }
         }
 
         private void LoadSettings()
@@ -32,7 +68,6 @@ namespace SoundBoard.Views
 
                 OutputFriendsComboBox.IsEnabled = false;
                 OutputMeComboBox.IsEnabled = false;
-                InputMicComboBox.IsEnabled = false;
 
                 var loadingDevices = new System.Collections.Generic.List<AudioOutputDevice>
                 {
@@ -46,89 +81,48 @@ namespace SoundBoard.Views
                 OutputFriendsComboBox.SelectedIndex = 0;
                 OutputMeComboBox.ItemsSource = loadingDevices;
                 OutputMeComboBox.SelectedIndex = 0;
-                InputMicComboBox.ItemsSource = loadingInputDevices;
-                InputMicComboBox.SelectedIndex = 0;
 
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     try
                     {
                         var devices = _viewModel.GetOutputDevices() ?? new System.Collections.Generic.List<AudioOutputDevice>();
-                        var inputDevices = _viewModel.GetInputDevices() ?? new System.Collections.Generic.List<AudioInputDevice>();
                         
-                        // Rileva driver rinominato OPPURE CABLE originale (prima del riavvio) in modo sicuro (evita eccezioni se Name è nullo)
-                        var virtualDevice = devices.Find(d => d.Name != null && (d.Name.Contains("ThePixelSoundboard Audio") || d.Name.Contains("CABLE Input")));
-                        bool hasVirtualDriver = virtualDevice != null;
-                        bool isRenamed = virtualDevice?.Name?.Contains("ThePixelSoundboard Audio") ?? false;
-
                         Dispatcher.Invoke(() =>
                         {
                             try
                             {
                                 OutputFriendsComboBox.ItemsSource = devices;
                                 OutputMeComboBox.ItemsSource = devices;
-                                InputMicComboBox.ItemsSource = inputDevices;
 
-                                // Applica lo stato della checkbox
-                                UseVirtualDriverCheckBox.IsChecked = _viewModel.UseVirtualDriver;
-
-                                if (hasVirtualDriver)
+                                if (!string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
                                 {
-                                    UseVirtualDriverCheckBox.IsEnabled = true;
-                                    DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
-                                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1A3A1A"));
-                                    DriverStatusIcon.Text = "✅";
-                                    DriverStatusTitle.Text = "Driver Virtuale Rilevato";
-                                    string micName = isRenamed ? "ThePixelSoundboard Mic" : "CABLE Output";
-                                    DriverStatusSubtitle.Text = $"{micName} è installato e pronto.";
-                                    DiscordMicNameRun.Text = micName;
-
-                                    // Auto-seleziona il driver virtuale come output amici solo se non è già configurato
-                                    if (virtualDevice != null && string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
-                                        _viewModel.SelectedOutputFriendsDeviceId = virtualDevice.Id;
-
-                                    if (!string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
-                                        OutputFriendsComboBox.SelectedValue = _viewModel.SelectedOutputFriendsDeviceId;
-                                    else if (devices.Count > 0)
-                                        OutputFriendsComboBox.SelectedIndex = 0;
-
-                                    // Seleziona il microfono dell'utente
-                                    if (!string.IsNullOrEmpty(_viewModel.SelectedInputMicrophoneDeviceId))
-                                        InputMicComboBox.SelectedValue = _viewModel.SelectedInputMicrophoneDeviceId;
-                                    else if (inputDevices.Count > 0)
-                                        InputMicComboBox.SelectedIndex = 0;
+                                    OutputFriendsComboBox.SelectedValue = _viewModel.SelectedOutputFriendsDeviceId;
                                 }
-                                else
+                                
+                                if (OutputFriendsComboBox.SelectedValue == null && devices.Count > 0)
                                 {
-                                    UseVirtualDriverCheckBox.IsEnabled = false;
-                                    UseVirtualDriverCheckBox.IsChecked = false;
-                                    _viewModel.UseVirtualDriver = false;
-
-                                    DriverStatusBorder.Background = new System.Windows.Media.SolidColorBrush(
-                                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3A2A1A"));
-                                    DriverStatusIcon.Text = "⚠️";
-                                    DriverStatusTitle.Text = "Driver Virtuale non rilevato";
-                                    DriverStatusSubtitle.Text = "Installa la versione completa per usare ThePixelSoundboard Mic su Discord";
-
-                                    if (!string.IsNullOrEmpty(_viewModel.SelectedOutputFriendsDeviceId))
-                                        OutputFriendsComboBox.SelectedValue = _viewModel.SelectedOutputFriendsDeviceId;
-                                    else if (devices.Count > 0)
-                                        OutputFriendsComboBox.SelectedIndex = 0;
+                                    OutputFriendsComboBox.SelectedIndex = 0;
+                                    _viewModel.SelectedOutputFriendsDeviceId = devices[0].Id;
                                 }
-
-                                // Aggiorna visibilità dei pannelli in base alla modalità selezionata
-                                UpdatePanelsVisibility(_viewModel.UseVirtualDriver);
 
                                 if (!string.IsNullOrEmpty(_viewModel.SelectedOutputMeDeviceId))
+                                {
                                     OutputMeComboBox.SelectedValue = _viewModel.SelectedOutputMeDeviceId;
-                                else if (devices.Count > 1)
-                                    OutputMeComboBox.SelectedIndex = 1;
-                                else if (devices.Count > 0)
-                                    OutputMeComboBox.SelectedIndex = 0;
+                                }
+                                
+                                if (OutputMeComboBox.SelectedValue == null && devices.Count > 0)
+                                {
+                                    if (devices.Count > 1)
+                                        OutputMeComboBox.SelectedIndex = 1;
+                                    else
+                                        OutputMeComboBox.SelectedIndex = 0;
+                                        
+                                    _viewModel.SelectedOutputMeDeviceId = ((AudioOutputDevice)OutputMeComboBox.SelectedItem).Id;
+                                }
 
                                 OutputFriendsComboBox.IsEnabled = true;
                                 OutputMeComboBox.IsEnabled = true;
-                                InputMicComboBox.IsEnabled = true;
                             }
                             catch (Exception ex)
                             {
@@ -169,38 +163,6 @@ namespace SoundBoard.Views
                 _viewModel.SelectedOutputMeDeviceId = device.Id;
         }
 
-        private void InputMicComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializing) return;
-            if (!InputMicComboBox.IsDropDownOpen) return;
-            if (InputMicComboBox.SelectedItem is AudioInputDevice device)
-                _viewModel.SelectedInputMicrophoneDeviceId = device.Id;
-        }
-
-        private void UseVirtualDriverCheckBox_Changed(object sender, RoutedEventArgs e)
-        {
-            if (_isInitializing) return;
-            bool isChecked = UseVirtualDriverCheckBox.IsChecked ?? false;
-            _viewModel.UseVirtualDriver = isChecked;
-            UpdatePanelsVisibility(isChecked);
-        }
-
-        private void UpdatePanelsVisibility(bool useDriver)
-        {
-            if (useDriver)
-            {
-                FriendsOutputPanel.Visibility = Visibility.Collapsed;
-                PhysicalMicPanel.Visibility = Visibility.Visible;
-                DiscordInfoBorder.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                FriendsOutputPanel.Visibility = Visibility.Visible;
-                PhysicalMicPanel.Visibility = Visibility.Collapsed;
-                DiscordInfoBorder.Visibility = Visibility.Collapsed;
-            }
-        }
-
         private void StartWithWindowsCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             _viewModel.StartWithWindows = StartWithWindowsCheckBox.IsChecked ?? false;
@@ -225,6 +187,16 @@ namespace SoundBoard.Views
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void ResetOnboarding_Click(object sender, RoutedEventArgs e)
+        {
+            var onboarding = new OnboardingWindow(_viewModel) { Owner = this };
+            if (onboarding.ShowDialog() == true)
+            {
+                _viewModel.IsOnboarded = true;
+                LoadSettings();
+            }
         }
     }
 }

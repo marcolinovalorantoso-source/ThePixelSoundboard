@@ -196,17 +196,28 @@ namespace SoundBoard.ViewModels
             AddButton(model);
         }
 
+        public event Action? PreviewEnded;
+
         public void PlayPreview(string filePath)
         {
             try
             {
-                _audioEngine.Play("preview", filePath, MasterVolume);
+                _audioEngine.Play("preview", filePath, PreviewVolume);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Impossibile riprodurre l'anteprima:\n{ex.Message}", "SoundBoard",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        public void StopPreview()
+        {
+            try
+            {
+                _audioEngine.Stop("preview");
+            }
+            catch { }
         }
 
         private static readonly string[] Palette = { "#3A6EA5", "#5B8C5A", "#A5473A", "#8C5A9A", "#C08A2E", "#3A9A8C", "#7A3A9A", "#4A4A5E" };
@@ -363,8 +374,13 @@ namespace SoundBoard.ViewModels
 
         private void OnSoundEndedNaturally(string buttonId)
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
+                if (buttonId == "preview")
+                {
+                    PreviewEnded?.Invoke();
+                    return;
+                }
                 var vm = AllButtons.FirstOrDefault(b => b.Id == buttonId);
                 if (vm != null)
                 {
@@ -372,7 +388,7 @@ namespace SoundBoard.ViewModels
                     vm.IsPaused = false;
                     PlayingSounds.Remove(vm);
                 }
-            });
+            }));
         }
 
         private void HookButtonEvents(SoundButtonViewModel vm)
@@ -430,6 +446,24 @@ namespace SoundBoard.ViewModels
             }
         }
 
+        private double _previewVolume;
+        public double PreviewVolume
+        {
+            get => _previewVolume;
+            set
+            {
+                if (SetField(ref _previewVolume, value))
+                {
+                    _settings.PreviewVolume = value;
+                    try
+                    {
+                        _audioEngine.SetVolume("preview", value);
+                    }
+                    catch { }
+                    SaveState();
+                }
+            }
+        }
         public System.Collections.Generic.List<AudioOutputDevice> GetOutputDevices() => _audioEngine.GetOutputDevices();
         public System.Collections.Generic.List<AudioInputDevice> GetInputDevices() => _audioEngine.GetInputDevices();
 
@@ -440,7 +474,7 @@ namespace SoundBoard.ViewModels
             {
                 if (_settings.OutputFriendsDeviceId == value) return;
                 _settings.OutputFriendsDeviceId = value;
-                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, _settings.InputMicrophoneDeviceId, MasterVolume);
+                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, null, MasterVolume);
                 SaveState();
             }
         }
@@ -452,7 +486,7 @@ namespace SoundBoard.ViewModels
             {
                 if (_settings.OutputMeDeviceId == value) return;
                 _settings.OutputMeDeviceId = value;
-                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, _settings.InputMicrophoneDeviceId, MasterVolume);
+                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, null, MasterVolume);
                 SaveState();
             }
         }
@@ -464,38 +498,17 @@ namespace SoundBoard.ViewModels
             {
                 if (_settings.InputMicrophoneDeviceId == value) return;
                 _settings.InputMicrophoneDeviceId = value;
-                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, UseVirtualDriver ? _settings.InputMicrophoneDeviceId : null, MasterVolume);
                 SaveState();
             }
         }
 
         public bool UseVirtualDriver
         {
-            get => _settings.UseVirtualDriver;
-            set
-            {
-                if (_settings.UseVirtualDriver == value) return;
-                _settings.UseVirtualDriver = value;
-                
-                if (value)
-                {
-                    // Forza l'output amici sul driver virtuale (rinominato o generico) per assicurare che il loopback si avvii
-                    var devices = GetOutputDevices();
-                    var virtualDev = devices.FirstOrDefault(d => 
-                        d.Name != null && (
-                        d.Name.Contains("ThePixelSoundboard Audio", StringComparison.OrdinalIgnoreCase) || 
-                        d.Name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase)));
-                    if (virtualDev != null)
-                    {
-                        _settings.OutputFriendsDeviceId = virtualDev.Id;
-                    }
-                }
-                
-                _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, value ? _settings.InputMicrophoneDeviceId : null, MasterVolume);
-                SaveState();
-                OnPropertyChanged(nameof(UseVirtualDriver));
-            }
+            get => false;
+            set { }
         }
+
+
 
         public bool StartWithWindows
         {
@@ -542,55 +555,26 @@ namespace SoundBoard.ViewModels
                 var vm = new SoundButtonViewModel(buttonModel);
                 HookButtonEvents(vm);
                 AllButtons.Add(vm);
-            }
-            SelectedFolder = Folders.FirstOrDefault(f => f.Id == _settings.LastSelectedFolderId);
+            }            SelectedFolder = Folders.FirstOrDefault(f => f.Id == _settings.LastSelectedFolderId);
             _masterVolume = _settings.MasterVolume;
+            _previewVolume = _settings.PreviewVolume;
 
             try
             {
                 var devices = _audioEngine.GetOutputDevices();
-                // Rileva se il driver rinominato è presente per l'auto-attivazione
                 var renamedTarget = devices.FirstOrDefault(d => d.Name.Contains("ThePixelSoundboard Audio"));
                 var genericTarget = devices.FirstOrDefault(d => d.Name.Contains("CABLE Input"));
                 
                 var target = renamedTarget ?? genericTarget;
-                if (target != null)
+                if (target != null && string.IsNullOrEmpty(_settings.OutputFriendsDeviceId))
                 {
-                    // Se la modalità driver virtuale è attiva o era attiva, assicuriamo che l'output amici punti al driver virtuale
-                    if (_settings.UseVirtualDriver || string.IsNullOrEmpty(_settings.OutputFriendsDeviceId))
-                    {
-                        _settings.OutputFriendsDeviceId = target.Id;
-                    }
-                    
-                    // Auto-attiva la modalità driver virtuale se rileviamo la versione rinominata per la prima volta
-                    if (renamedTarget != null && !_settings.UseVirtualDriver && string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))
-                    {
-                        _settings.UseVirtualDriver = true;
-                    }
-                    else if (renamedTarget == null && genericTarget == null)
-                    {
-                        // Disattiva solo se non c'è NESSUN driver (né generico né rinominato)
-                        _settings.UseVirtualDriver = false;
-                    }
-                    
-                    if (string.IsNullOrEmpty(_settings.InputMicrophoneDeviceId))
-                    {
-                        var inputDevices = _audioEngine.GetInputDevices();
-                        if (inputDevices.Count > 0)
-                        {
-                            _settings.InputMicrophoneDeviceId = inputDevices[0].Id;
-                        }
-                    }
-                }
-                else
-                {
-                    // Nessun driver (né ufficiale né generico) rilevato
-                    _settings.UseVirtualDriver = false;
+                    _settings.OutputFriendsDeviceId = target.Id;
                 }
             }
             catch { }
 
-            _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, _settings.UseVirtualDriver ? _settings.InputMicrophoneDeviceId : null, _masterVolume);
+            _settings.UseVirtualDriver = false;
+            _audioEngine.Initialize(_settings.OutputFriendsDeviceId, _settings.OutputMeDeviceId, null, _masterVolume);
         }
 
         public void SaveState() => _settingsService.Save(_settings);
@@ -604,6 +588,18 @@ namespace SoundBoard.ViewModels
 
         public double WindowWidth => _settings.WindowWidth;
         public double WindowHeight => _settings.WindowHeight;
+
+        public bool IsOnboarded
+        {
+            get => _settings.IsOnboarded;
+            set
+            {
+                if (_settings.IsOnboarded == value) return;
+                _settings.IsOnboarded = value;
+                SaveState();
+                OnPropertyChanged(nameof(IsOnboarded));
+            }
+        }
 
         public void Dispose()
         {

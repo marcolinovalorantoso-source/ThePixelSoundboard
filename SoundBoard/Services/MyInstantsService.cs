@@ -23,66 +23,31 @@ namespace SoundBoard.Services
 
         public async Task<MyInstantsResponse?> SearchAsync(string query = "", int page = 1, string category = "")
         {
-            var url = BaseUrl + "?format=json";
+            string url;
             
-            string effectiveQuery = query;
-
-            if (string.IsNullOrWhiteSpace(effectiveQuery) && !string.IsNullOrWhiteSpace(category))
+            if (!string.IsNullOrWhiteSpace(query))
             {
-                var categoryLower = category.ToLower().Trim();
-                switch (categoryLower)
-                {
-                    case "politics":
-                    case "politica":
-                        effectiveQuery = "politica";
-                        break;
-                    case "meme":
-                    case "memes":
-                        effectiveQuery = "meme";
-                        break;
-                    case "games":
-                    case "giochi":
-                        effectiveQuery = "game";
-                        break;
-                    case "sports":
-                    case "sport":
-                        effectiveQuery = "sport";
-                        break;
-                    case "television":
-                    case "televisione":
-                        effectiveQuery = "tv";
-                        break;
-                    case "music":
-                    case "musica":
-                        effectiveQuery = "music";
-                        break;
-                    case "sound-effects":
-                    case "effetti-sonori":
-                        effectiveQuery = "effect";
-                        break;
-                    case "movie":
-                    case "film":
-                        effectiveQuery = "movie";
-                        break;
-                    case "anime":
-                        effectiveQuery = "anime";
-                        break;
-                    default:
-                        effectiveQuery = categoryLower;
-                        break;
-                }
+                url = $"https://www.myinstants.com/en/search/?name={Uri.EscapeDataString(query.Trim())}";
+                if (page > 1) url += $"&page={page}";
             }
-
-            if (!string.IsNullOrWhiteSpace(effectiveQuery))
-                url += $"&name={Uri.EscapeDataString(effectiveQuery)}";
-            
-            if (page > 1)
-                url += $"&page={page}";
+            else if (!string.IsNullOrWhiteSpace(category))
+            {
+                url = $"https://www.myinstants.com/en/categories/{category}/it/";
+                if (page > 1) url += $"?page={page}";
+            }
+            else
+            {
+                url = "https://www.myinstants.com/en/index/it/";
+                if (page > 1) url += $"?page={page}";
+            }
 
             try
             {
-                var json = await _http.GetStringAsync(url);
-                return JsonSerializer.Deserialize<MyInstantsResponse>(json);
+                var html = await _http.GetStringAsync(url);
+                var items = ParseHtml(html);
+                
+                string? nextUrl = items.Count >= 8 ? (url.Contains("?") ? $"{url}&page={page + 1}" : $"{url}?page={page + 1}") : null;
+                return new MyInstantsResponse(items.Count, nextUrl, null, items);
             }
             catch
             {
@@ -94,13 +59,130 @@ namespace SoundBoard.Services
         {
             try
             {
-                var json = await _http.GetStringAsync(url);
-                return JsonSerializer.Deserialize<MyInstantsResponse>(json);
+                var html = await _http.GetStringAsync(url);
+                var items = ParseHtml(html);
+                
+                // Estrae il numero di pagina corrente dall'URL della pagina caricata per impostare il link alla pagina successiva
+                int page = 1;
+                var uri = new Uri(url);
+                var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                string? pageStr = queryParams.Get("page");
+                if (string.IsNullOrEmpty(pageStr))
+                {
+                    // Controlla se la pagina è nel path del tipo ?page= o simile
+                    int pageIndex = url.IndexOf("page=");
+                    if (pageIndex != -1 && int.TryParse(url.Substring(pageIndex + 5), out int p))
+                        page = p;
+                }
+                else
+                {
+                    int.TryParse(pageStr, out page);
+                }
+
+                // Genera l'URL della pagina successiva rimuovendo eventuali parametri di pagina vecchi
+                string cleanUrl = url;
+                int idx = url.IndexOf("page=");
+                if (idx != -1)
+                {
+                    cleanUrl = url.Substring(0, idx - 1); // Rimuove "&page=" o "?page="
+                }
+                string nextUrl = cleanUrl.Contains("?") ? $"{cleanUrl}&page={page + 1}" : $"{cleanUrl}?page={page + 1}";
+
+                return new MyInstantsResponse(items.Count, items.Count >= 8 ? nextUrl : null, null, items);
             }
             catch
             {
                 return null;
             }
+        }
+
+        private List<MyInstantItem> ParseHtml(string html)
+        {
+            var list = new List<MyInstantItem>();
+            if (string.IsNullOrEmpty(html)) return list;
+
+            int index = 0;
+            while (true)
+            {
+                index = html.IndexOf("<div class=\"instant\"", index);
+                if (index == -1) break;
+
+                int nextIndex = html.IndexOf("<div class=\"instant\"", index + 20);
+                string block = nextIndex == -1 ? html.Substring(index) : html.Substring(index, nextIndex - index);
+                index = nextIndex == -1 ? html.Length : nextIndex;
+
+                try
+                {
+                    // 1. Estrae Colore
+                    string color = "FF0000";
+                    int colorIdx = block.IndexOf("background-color:");
+                    if (colorIdx != -1)
+                    {
+                        int start = colorIdx + "background-color:".Length;
+                        int end = block.IndexOfAny(new char[] { ';', '"', '\'' }, start);
+                        if (end != -1)
+                        {
+                            color = block.Substring(start, end - start).Trim().Replace("#", "");
+                        }
+                    }
+
+                    // 2. Estrae Sound URL
+                    string soundUrl = "";
+                    int playIdx = block.IndexOf("play('");
+                    if (playIdx != -1)
+                    {
+                        int start = playIdx + "play('".Length;
+                        int end = block.IndexOf("'", start);
+                        if (end != -1)
+                        {
+                            string path = block.Substring(start, end - start);
+                            if (path.StartsWith("/"))
+                                soundUrl = "https://www.myinstants.com" + path;
+                            else
+                                soundUrl = path;
+                        }
+                    }
+
+                    // 3. Estrae Slug e Nome
+                    string slug = "";
+                    string name = "";
+                    int hrefIdx = block.IndexOf("href=\"/en/instant/");
+                    if (hrefIdx == -1)
+                        hrefIdx = block.IndexOf("href=\"/instant/");
+
+                    if (hrefIdx != -1)
+                    {
+                        int startHref = block.IndexOf("/", hrefIdx + 6);
+                        startHref = block.IndexOf("/", startHref + 1);
+                        startHref = block.IndexOf("/", startHref + 1);
+                        int endHref = block.IndexOf("/", startHref + 1);
+                        if (endHref != -1)
+                        {
+                            slug = block.Substring(startHref + 1, endHref - startHref - 1);
+                        }
+
+                        // Nome
+                        int closeTagIdx = block.IndexOf(">", hrefIdx);
+                        if (closeTagIdx != -1)
+                        {
+                            int endTagIdx = block.IndexOf("</a>", closeTagIdx);
+                            if (endTagIdx != -1)
+                            {
+                                name = block.Substring(closeTagIdx + 1, endTagIdx - closeTagIdx - 1).Trim();
+                                name = System.Net.WebUtility.HtmlDecode(name);
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(soundUrl) && !string.IsNullOrEmpty(name))
+                    {
+                        list.Add(new MyInstantItem(name, slug, soundUrl, color, ""));
+                    }
+                }
+                catch { }
+            }
+
+            return list;
         }
 
         public async Task<string> DownloadSoundAsync(MyInstantItem item, string destFolder)

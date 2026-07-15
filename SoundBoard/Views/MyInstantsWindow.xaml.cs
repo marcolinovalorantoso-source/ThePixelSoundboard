@@ -27,12 +27,12 @@ namespace SoundBoard.Views
         private static readonly Dictionary<string, string> Categories = new()
         {
             { "Tutte le categorie", "" },
-            { "Meme", "meme" },
+            { "Meme", "memes" },
             { "Giochi", "games" },
             { "Musica", "music" },
             { "Effetti Sonori", "sound-effects" },
-            { "Film", "movie" },
-            { "Anime", "anime" },
+            { "Film", "movies" },
+            { "Anime", "anime%20&%20manga" },
             { "Televisione", "television" },
             { "Sport", "sports" },
             { "Politica", "politics" }
@@ -42,6 +42,7 @@ namespace SoundBoard.Views
         {
             InitializeComponent();
             _viewModel = viewModel;
+            DataContext = _viewModel;
             ThemeService.ApplyDarkTheme(this);
             
             SoundsItemsControl.ItemsSource = _items;
@@ -49,8 +50,74 @@ namespace SoundBoard.Views
             // Imposta cartella selezionata nella barra di stato
             SelectedFolderTextBlock.Text = "Importa in: " + (_viewModel.SelectedFolder?.Name ?? "Tutti i suoni");
 
+            _viewModel.PreviewEnded += ViewModel_PreviewEnded;
+            this.Closing += Window_Closing;
+            this.Closed += MyInstantsWindow_Closed;
+
             InitializeCategories();
             _ = PerformSearchAsync(reset: true);
+        }
+
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.StopPreview();
+            if (_currentlyPlayingItem != null)
+            {
+                _currentlyPlayingItem.IsPlaying = false;
+                _currentlyPlayingItem = null;
+            }
+            StatusTextBlock.Text = "Pronto";
+        }
+
+        private bool _isClosingAnimationCompleted = false;
+        private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (!_isClosingAnimationCompleted)
+            {
+                e.Cancel = true; // Annulla chiusura immediata
+
+                var grid = MainGrid;
+                var transform = WindowTransform;
+
+                // Disattiva preview prima di uscire
+                _viewModel.StopPreview();
+
+                var sb = new System.Windows.Media.Animation.Storyboard();
+
+                var fadeAnim = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.0, new Duration(System.TimeSpan.FromSeconds(0.18)));
+                System.Windows.Media.Animation.Storyboard.SetTarget(fadeAnim, grid);
+                System.Windows.Media.Animation.Storyboard.SetTargetProperty(fadeAnim, new PropertyPath(Grid.OpacityProperty));
+                sb.Children.Add(fadeAnim);
+
+                var slideAnim = new System.Windows.Media.Animation.DoubleAnimation(0, 30, new Duration(System.TimeSpan.FromSeconds(0.22)));
+                System.Windows.Media.Animation.Storyboard.SetTarget(slideAnim, transform);
+                System.Windows.Media.Animation.Storyboard.SetTargetProperty(slideAnim, new PropertyPath(TranslateTransform.YProperty));
+                sb.Children.Add(slideAnim);
+
+                sb.Completed += (s, ev) =>
+                {
+                    _isClosingAnimationCompleted = true;
+                    Close(); // Chiude definitivamente
+                };
+
+                sb.Begin();
+            }
+        }
+
+        private void ViewModel_PreviewEnded()
+        {
+            if (_currentlyPlayingItem != null)
+            {
+                _currentlyPlayingItem.IsPlaying = false;
+                _currentlyPlayingItem = null;
+            }
+            StatusTextBlock.Text = "Pronto";
+        }
+
+        private void MyInstantsWindow_Closed(object? sender, EventArgs e)
+        {
+            _viewModel.PreviewEnded -= ViewModel_PreviewEnded;
+            _viewModel.StopPreview();
         }
 
         private void InitializeCategories()
@@ -203,31 +270,58 @@ namespace SoundBoard.Views
             }
         }
 
+        private MyInstantUIItem? _currentlyPlayingItem;
+
         private async void PreviewButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement { DataContext: MyInstantUIItem item })
             {
-                StatusTextBlock.Text = $"Riproduzione anteprima: {item.Name}...";
+                if (_currentlyPlayingItem == item)
+                {
+                    // Cliccato sullo stesso elemento: ferma la riproduzione
+                    _viewModel.StopPreview();
+                    item.IsPlaying = false;
+                    _currentlyPlayingItem = null;
+                    StatusTextBlock.Text = "Pronto";
+                    return;
+                }
+
+                // Ferma eventuale riproduzione precedente
+                _viewModel.StopPreview();
+                if (_currentlyPlayingItem != null)
+                {
+                    _currentlyPlayingItem.IsPlaying = false;
+                }
+
+                _currentlyPlayingItem = item;
+                item.IsPlaying = true;
+                StatusTextBlock.Text = $"Caricamento anteprima: {item.Name}...";
+
                 try
                 {
                     var tempFolder = Path.Combine(Path.GetTempPath(), "SoundBoardPreviews");
                     var localPath = await _service.DownloadSoundAsync(item.RawItem, tempFolder);
                     
+                    if (_currentlyPlayingItem != item) return; // L'utente ha interrotto nel frattempo
+
                     if (localPath != null && File.Exists(localPath))
                     {
+                        StatusTextBlock.Text = $"Riproduzione anteprima: {item.Name}...";
                         _viewModel.PlayPreview(localPath);
                     }
                     else
                     {
                         MessageBox.Show("Impossibile scaricare l'anteprima audio.", "Errore", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        item.IsPlaying = false;
+                        _currentlyPlayingItem = null;
+                        StatusTextBlock.Text = "Pronto";
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("Errore di riproduzione: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                finally
-                {
+                    item.IsPlaying = false;
+                    _currentlyPlayingItem = null;
                     StatusTextBlock.Text = "Pronto";
                 }
             }
@@ -286,11 +380,26 @@ namespace SoundBoard.Views
         }
     }
 
-    public class MyInstantUIItem
+    public class MyInstantUIItem : System.ComponentModel.INotifyPropertyChanged
     {
         public MyInstantItem RawItem { get; }
         public string Name => RawItem.Name;
-        
+
+        private bool _isPlaying;
+        public bool IsPlaying
+        {
+            get => _isPlaying;
+            set
+            {
+                if (_isPlaying == value) return;
+                _isPlaying = value;
+                OnPropertyChanged(nameof(IsPlaying));
+                OnPropertyChanged(nameof(PlayIcon));
+            }
+        }
+
+        public string PlayIcon => IsPlaying ? " ■" : " ▶";
+
         public Brush ColorBrush
         {
             get
@@ -298,7 +407,7 @@ namespace SoundBoard.Views
                 try
                 {
                     var hex = RawItem.Color;
-                    if (string.IsNullOrEmpty(hex)) return new SolidColorBrush(Color.FromRgb(91, 140, 90)); // Accent color di fallback
+                    if (string.IsNullOrEmpty(hex)) return new SolidColorBrush(Color.FromRgb(91, 140, 90));
                     if (!hex.StartsWith("#")) hex = "#" + hex;
                     return (Brush?)new BrushConverter().ConvertFromString(hex) ?? new SolidColorBrush(Color.FromRgb(91, 140, 90));
                 }
@@ -312,6 +421,12 @@ namespace SoundBoard.Views
         public MyInstantUIItem(MyInstantItem rawItem)
         {
             RawItem = rawItem;
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
         }
     }
 }

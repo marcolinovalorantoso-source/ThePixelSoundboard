@@ -25,6 +25,8 @@ namespace SoundBoard.Services
         private BufferedWaveProvider? _micBuffer;
         private ISampleProvider? _micSampleProvider;
 
+
+
         private readonly Dictionary<string, ActiveSound> _activeSounds = new();
         private string? _friendsDeviceId;
         private string? _meDeviceId;
@@ -218,6 +220,15 @@ namespace SoundBoard.Services
                                 friendsDeviceNumber = idx - 1; // Sottrae 1 perché l'elemento a indice 0 è "[Disattivato]"
                                 friendsDeviceName = devList[idx].Name;
                             }
+                            else
+                            {
+                                // Vecchio ID numerico o non trovato: prova ad interpretarlo come indice WaveOut
+                                if (int.TryParse(friendsDeviceId, out int oldIdx) && oldIdx >= 0 && oldIdx < devList.Count - 1)
+                                {
+                                    friendsDeviceNumber = oldIdx;
+                                    friendsDeviceName = devList[oldIdx + 1].Name;
+                                }
+                            }
                         }
 
                         int meDeviceNumber = -1; // -1 = default device
@@ -243,6 +254,15 @@ namespace SoundBoard.Services
                                 {
                                     meDeviceNumber = idx - 1; // Sottrae 1 perché l'elemento a indice 0 è "[Disattivato]"
                                     meDeviceName = devList[idx].Name;
+                                }
+                                else
+                                {
+                                    // Vecchio ID numerico o non trovato: prova ad interpretarlo come indice WaveOut
+                                    if (int.TryParse(meDeviceId, out int oldIdx) && oldIdx >= 0 && oldIdx < devList.Count - 1)
+                                    {
+                                        meDeviceNumber = oldIdx;
+                                        meDeviceName = devList[oldIdx + 1].Name;
+                                    }
                                 }
                             }
                             if (meDeviceNumber == -1)
@@ -344,7 +364,23 @@ namespace SoundBoard.Services
                         {
                             var inputDevList = GetInputDevices();
                             int idx = inputDevList.FindIndex(d => d.Id == micDeviceId);
-                            if (idx >= 0) micIndex = idx;
+                            if (idx >= 0)
+                            {
+                                micIndex = idx;
+                            }
+                            else
+                            {
+                                // Vecchio ID numerico: prova a usarlo direttamente come indice WaveIn
+                                if (int.TryParse(micDeviceId, out int oldIdx) && oldIdx >= 0 && oldIdx < inputDevList.Count)
+                                {
+                                    micIndex = oldIdx;
+                                }
+                                else if (inputDevList.Count > 0)
+                                {
+                                    // Fallback di emergenza al primo microfono se l'ID salvato non è valido
+                                    micIndex = 0;
+                                }
+                            }
                         }
 
                         if (isFriendsVirtual && micIndex >= 0 && micIndex < WaveIn.DeviceCount)
@@ -356,23 +392,23 @@ namespace SoundBoard.Services
                             };
                             _micInput.BufferMilliseconds = 50;
 
-                                _micBuffer = new BufferedWaveProvider(_micInput.WaveFormat)
-                                {
-                                    DiscardOnBufferOverflow = true,
-                                    ReadFully = true
-                                };
+                            _micBuffer = new BufferedWaveProvider(_micInput.WaveFormat)
+                            {
+                                DiscardOnBufferOverflow = true,
+                                ReadFully = true
+                            };
 
-                                _micInput.DataAvailable += (sender, e) =>
-                                {
-                                    if (_micBuffer != null)
-                                        _micBuffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
-                                };
+                            _micInput.DataAvailable += (sender, e) =>
+                            {
+                                if (_micBuffer != null)
+                                    _micBuffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
+                            };
 
-                                var rawProvider = _micBuffer.ToSampleProvider();
-                                _micSampleProvider = ConvertToMixFormat(rawProvider);
+                            var rawProvider = _micBuffer.ToSampleProvider();
+                            _micSampleProvider = ConvertToMixFormat(rawProvider);
 
-                                _mixerFriends.AddMixerInput(_micSampleProvider);
-                                _micInput.StartRecording();
+                            _mixerFriends.AddMixerInput(_micSampleProvider);
+                            _micInput.StartRecording();
                         }
                     }
                     catch (Exception ex)
@@ -426,7 +462,7 @@ namespace SoundBoard.Services
             {
                 if (_activeSounds.TryGetValue(buttonId, out var active))
                 {
-                    try { active.ReaderFriends.CurrentTime = time; } catch {}
+                    try { if (active.ReaderFriends != null) active.ReaderFriends.CurrentTime = time; } catch {}
                     try { active.ReaderMe.CurrentTime = time; } catch {}
                 }
             }
@@ -466,31 +502,42 @@ namespace SoundBoard.Services
             
             Stop(buttonId);
 
-            WaveStream readerFriends = OpenReader(filePath);
-            WaveStream readerMe = OpenReader(filePath);
+            bool playToFriends = (buttonId != "preview"); // PREVIEWS ARE LOCAL ONLY!
+            bool playToMe = _meDeviceId != "disabled";
+
+            WaveStream? readerFriends = null;
+            PauseableSampleProvider? pauseFriends = null;
+            VolumeSampleProvider? volumeProviderFriends = null;
 
             float normalizationGain = 1.0f;
+
+            WaveStream readerMe = OpenReader(filePath);
+
             if (normalize)
             {
-                float peak = GetPeakVolume(readerFriends);
+                // Calcoliamo il peak usando il reader locale
+                float peak = GetPeakVolume(readerMe);
                 if (peak > 0.01f)
                 {
-                    // Converte decibel target in guadagno lineare (es: -1 dB = ~89% ampiezza max)
                     float targetLinear = (float)Math.Pow(10.0, normalizeDb / 20.0);
                     normalizationGain = targetLinear / peak;
-                    if (normalizationGain > 4.0f) normalizationGain = 4.0f; // max boost limit
+                    if (normalizationGain > 4.0f) normalizationGain = 4.0f;
                 }
             }
 
-            ISampleProvider sampleFriends = ConvertToMixFormat(readerFriends.ToSampleProvider());
-            var pauseFriends = new PauseableSampleProvider(sampleFriends);
-            var volumeProviderFriends = new VolumeSampleProvider(pauseFriends) { Volume = (float)(volume * normalizationGain) };
+            if (playToFriends)
+            {
+                readerFriends = OpenReader(filePath);
+                ISampleProvider sampleFriends = ConvertToMixFormat(readerFriends.ToSampleProvider());
+                pauseFriends = new PauseableSampleProvider(sampleFriends);
+                volumeProviderFriends = new VolumeSampleProvider(pauseFriends) { Volume = (float)(volume * normalizationGain) };
+            }
 
             ISampleProvider sampleMe = ConvertToMixFormat(readerMe.ToSampleProvider());
             var pauseMe = new PauseableSampleProvider(sampleMe);
             var volumeProviderMe = new VolumeSampleProvider(pauseMe) { Volume = (float)(volume * normalizationGain) };
-            bool playToMe = _meDeviceId != "disabled";
-            bool isSameDevice = playToMe &&
+
+            bool isSameDevice = playToFriends && playToMe &&
                                 !string.IsNullOrEmpty(_resolvedFriendsDeviceName) &&
                                 !string.IsNullOrEmpty(_resolvedMeDeviceName) &&
                                 _resolvedFriendsDeviceName.Equals(_resolvedMeDeviceName, StringComparison.OrdinalIgnoreCase);
@@ -503,17 +550,17 @@ namespace SoundBoard.Services
                     VolumeFriends = volumeProviderFriends,
                     ReaderFriends = readerFriends,
                     PauseFriends = pauseFriends,
-                    FriendsEnded = isSameDevice, // Se è lo stesso dispositivo, consideriamo il canale amici già terminato per lo smaltimento
+                    FriendsEnded = !playToFriends || isSameDevice,
 
                     MixerInputMe = volumeProviderMe,
                     VolumeMe = volumeProviderMe,
                     ReaderMe = readerMe,
                     PauseMe = pauseMe,
-                    MeEnded = !playToMe // Se è disabilitato, lo consideriamo già terminato
+                    MeEnded = !playToMe
                 };
             }
 
-            if (!isSameDevice)
+            if (playToFriends && !isSameDevice && volumeProviderFriends != null)
             {
                 _mixerFriends.AddMixerInput(volumeProviderFriends);
             }
@@ -529,17 +576,16 @@ namespace SoundBoard.Services
             {
                 if (_activeSounds.TryGetValue(buttonId, out var active))
                 {
-                    // Riattiva prima di fermare per assicurarsi che i buffer vengano rilasciati
-                    active.PauseFriends.IsPaused = false;
-                    active.PauseMe.IsPaused = false;
+                    if (active.PauseFriends != null) active.PauseFriends.IsPaused = false;
+                    if (active.PauseMe != null) active.PauseMe.IsPaused = false;
 
-                    if (_mixerFriends != null)
+                    if (_mixerFriends != null && active.MixerInputFriends != null)
                         _mixerFriends.RemoveMixerInput(active.MixerInputFriends);
-                    if (_mixerMe != null)
+                    if (_mixerMe != null && active.MixerInputMe != null)
                         _mixerMe.RemoveMixerInput(active.MixerInputMe);
 
-                    try { active.ReaderFriends.Dispose(); } catch { }
-                    try { active.ReaderMe.Dispose(); } catch { }
+                    try { active.ReaderFriends?.Dispose(); } catch { }
+                    try { active.ReaderMe?.Dispose(); } catch { }
 
                     _activeSounds.Remove(buttonId);
                 }
@@ -553,8 +599,8 @@ namespace SoundBoard.Services
                 if (_activeSounds.TryGetValue(buttonId, out var active))
                 {
                     active.IsPaused = true;
-                    active.PauseFriends.IsPaused = true;
-                    active.PauseMe.IsPaused = true;
+                    if (active.PauseFriends != null) active.PauseFriends.IsPaused = true;
+                    if (active.PauseMe != null) active.PauseMe.IsPaused = true;
                 }
             }
         }
@@ -566,8 +612,8 @@ namespace SoundBoard.Services
                 if (_activeSounds.TryGetValue(buttonId, out var active))
                 {
                     active.IsPaused = false;
-                    active.PauseFriends.IsPaused = false;
-                    active.PauseMe.IsPaused = false;
+                    if (active.PauseFriends != null) active.PauseFriends.IsPaused = false;
+                    if (active.PauseMe != null) active.PauseMe.IsPaused = false;
                 }
             }
         }
@@ -590,7 +636,7 @@ namespace SoundBoard.Services
                 if (_activeSounds.TryGetValue(buttonId, out var active) && !active.IsMuted)
                 {
                     float vol = (float)Math.Clamp(volume, 0.0, 1.0);
-                    active.VolumeFriends.Volume = vol;
+                    if (active.VolumeFriends != null) active.VolumeFriends.Volume = vol;
                     active.VolumeMe.Volume = vol;
                 }
             }
@@ -603,7 +649,7 @@ namespace SoundBoard.Services
                 if (!_activeSounds.TryGetValue(buttonId, out var active)) return;
                 active.IsMuted = muted;
                 float vol = muted ? 0f : (float)currentSliderVolume;
-                active.VolumeFriends.Volume = vol;
+                if (active.VolumeFriends != null) active.VolumeFriends.Volume = vol;
                 active.VolumeMe.Volume = vol;
             }
         }
@@ -648,8 +694,8 @@ namespace SoundBoard.Services
 
                     if (canDisposeFriends && canDisposeMe)
                     {
-                        active.ReaderFriends.Dispose();
-                        active.ReaderMe.Dispose();
+                        try { active.ReaderFriends?.Dispose(); } catch { }
+                        try { active.ReaderMe?.Dispose(); } catch { }
                         _activeSounds.Remove(foundKey);
                         SoundEnded?.Invoke(foundKey);
                     }

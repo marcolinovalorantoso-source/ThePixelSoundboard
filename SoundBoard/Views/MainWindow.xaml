@@ -21,7 +21,36 @@
         <DataTemplate x:Key="SoundTileTemplate" DataType="{x:Type vm:SoundButtonViewModel}">
             <Border Width="140" Height="100" Margin="6" CornerRadius="10"
                     Background="{Binding Color, Converter={StaticResource HexColorToBrush}}"
-                    MouseLeftButtonUp="SoundTile_Click" Cursor="Hand">
+                    MouseLeftButtonUp="SoundTile_Click" Cursor="Hand" RenderTransformOrigin="0.5,0.5">
+                <Border.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Border.RenderTransform>
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Border.MouseDown">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="0.94" Duration="0:0:0.08"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="0.94" Duration="0:0:0.08"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="Border.MouseUp">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.0" Duration="0:0:0.08"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.0" Duration="0:0:0.08"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="Border.MouseLeave">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.0" Duration="0:0:0.08"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.0" Duration="0:0:0.08"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="BorderThickness" Value="0"/>
@@ -36,6 +65,7 @@
                 <Border.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="✏️ Modifica" Click="EditMenuItem_Click"/>
+                        <MenuItem Header="✂️ Taglia Audio" Click="TrimMenuItem_Click"/>
                         <MenuItem Header="⌨️ Assegna hotkey" Click="HotkeyMenuItem_Click"/>
                         <MenuItem Header="⭐ Preferito" Click="FavoriteMenuItem_Click"/>
                         <Separator/>
@@ -132,6 +162,32 @@
                 </StackPanel>
             </Border>
         </DataTemplate>
+        <!-- Style for Drawer menu items -->
+        <Style x:Key="DrawerMenuItemStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#F1F2F6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1C2230"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#252F42"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid x:Name="RootGrid" Background="{StaticResource BgDarkBrush}" AllowDrop="True"
@@ -146,23 +202,36 @@
         <Border Grid.Row="0" Background="{StaticResource BgPanelBrush}" Padding="14,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="186"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <TextBlock Text="ThePixelSoundboard" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" MouseDown="Logo_MouseDown"/>
-                </StackPanel>
+                <Button Grid.Column="0" Click="HamburgerButton_Click" Background="{StaticResource AccentBrush}" Foreground="#FFFFFF" 
+                        BorderThickness="0" Cursor="Hand" ToolTip="Apri Menu Strumenti" Height="36" HorizontalAlignment="Left"
+                        OverridesDefaultStyle="True" VerticalAlignment="Center">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="18" Padding="14,6">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="✨" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Menu Strumenti" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="{StaticResource AccentHoverBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
 
-                <TextBox Grid.Column="1" Width="320" HorizontalAlignment="Left" VerticalAlignment="Center"
+                <TextBox Grid.Column="1" Width="320" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0,0,0"
                           Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                          Tag="🔍 Cerca un suono...">
+                          Tag="🔍 Cerca qui...">
                     <TextBox.Style>
                         <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                             <Style.Triggers>
@@ -176,22 +245,26 @@
 
                 <Button Grid.Column="2" Content="📁 Nuova cartella" Margin="8,0" Click="AddFolderButton_Click"/>
                 <Button Grid.Column="3" Content="⬆️ Importa suoni" Margin="8,0" Click="ImportButton_Click"/>
-                <Button Grid.Column="4" Content="🌐 MyInstants" Margin="8,0" Click="MyInstantsButton_Click"/>
-                <Button Grid.Column="5" Content="🗣️ TTS (Voce)" Margin="8,0" Click="TtsButton_Click"/>
-                <Button Grid.Column="6" Content="🎤 Registra" Margin="8,0" Click="RecorderButton_Click"/>
-                <Button Grid.Column="7" Width="40" Height="40" Padding="8" Click="SettingsButton_Click" ToolTip="Impostazioni"
+                
+                <Button Grid.Column="4" Width="40" Height="40" Padding="8" Click="SettingsButton_Click" ToolTip="Impostazioni"
                         Background="Transparent" BorderThickness="0" OverridesDefaultStyle="True">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                    RenderTransformOrigin="0.5,0.5">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#2A2E3A"/>
+                                    <Setter TargetName="border" Property="Background" Value="#2A2E3A"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Background" Value="#353A49"/>
+                                    <Setter TargetName="border" Property="Background" Value="#353A49"/>
+                                    <Setter TargetName="border" Property="RenderTransform">
+                                        <Setter.Value>
+                                            <ScaleTransform ScaleX="0.88" ScaleY="0.88"/>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -254,20 +327,120 @@
                             Visibility="{Binding IsSequencePlaying, Converter={StaticResource BoolToVis}}"/>
 
                     <!-- Cronologia -->
-                    <TextBlock Text="CRONOLOGIA" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
-                               Margin="8,18,8,6" FontWeight="Bold"/>
+                    <!-- Cronologia Header -->
+                    <Grid Margin="8,20,8,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🕒" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="CRONOLOGIA" FontSize="10.5" FontWeight="Bold" 
+                                       Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <!-- Bottone Cancella (mostrato solo se la cronologia ha elementi) -->
+                        <Button Grid.Column="1" Click="ClearHistory_Click" Background="Transparent" Foreground="#5F677A"
+                                BorderThickness="0" Cursor="Hand" Padding="4,2" FontSize="9" FontWeight="SemiBold"
+                                ToolTip="Pulisci cronologia" VerticalAlignment="Center" OverridesDefaultStyle="True">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding History.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <TextBlock Text="Cancella" x:Name="btnTxt"/>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="btnTxt" Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+
+                    <!-- Stato vuoto cronologia (mostrato se History è vuota) -->
+                    <Border Margin="8,4,8,8">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding History.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal" Opacity="0.45">
+                            <TextBlock Text="💤" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Nessun suono recente" FontSize="10.5" FontStyle="Italic" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Lista elementi della cronologia -->
                     <ItemsControl ItemsSource="{Binding History}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:SoundButtonViewModel}">
-                                <Border Background="{StaticResource BgElevatedBrush}" CornerRadius="6"
-                                        Padding="6,4" Margin="0,0,0,4" Cursor="Hand"
-                                        MouseLeftButtonUp="HistoryTile_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Icon}" FontSize="13" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding Name}" FontSize="11" TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                <Border x:Name="itemBorder" Background="#1D212A" CornerRadius="6"
+                                        Padding="8,6" Margin="0,0,0,4" Cursor="Hand"
+                                        MouseLeftButtonUp="HistoryTile_Click" RenderTransformOrigin="0.5,0.5">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                    </Border.RenderTransform>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseCaptured" Value="True">
+                                                    <Setter Property="RenderTransform">
+                                                        <Setter.Value>
+                                                            <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                        
+                                        <!-- Bottone elimina singolo elemento -->
+                                        <Button Grid.Column="2" Click="RemoveFromHistory_Click" Background="Transparent" BorderThickness="0"
+                                                Cursor="Hand" ToolTip="Rimuovi" OverridesDefaultStyle="True" VerticalAlignment="Center" Margin="4,0,0,0">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock Text="✕" FontSize="9.5" x:Name="delTxt" Foreground="#4A5260"/>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="delTxt" Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
                                 </Border>
+                                <DataTemplate.Triggers>
+                                    <Trigger SourceName="itemBorder" Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="itemBorder" Property="Background" Value="#252A36"/>
+                                    </Trigger>
+                                </DataTemplate.Triggers>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -276,15 +449,44 @@
             </Border>
 
             <!-- Griglia pulsanti suono -->
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="10">
-                <ItemsControl ItemsSource="{Binding FilteredButtons}" ItemTemplate="{StaticResource SoundTileTemplate}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </ScrollViewer>
+            <Grid Grid.Column="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                    <ItemsControl ItemsSource="{Binding FilteredButtons}" ItemTemplate="{StaticResource SoundTileTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Empty State (mostrato solo se non ci sono suoni nella vista corrente) -->
+                <Border x:Name="EmptyStateView" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="380" Margin="20">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding FilteredButtons.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center">
+                        <!-- Icona olografica/neon -->
+                        <Border Width="80" Height="80" CornerRadius="40" Background="#1C2230" BorderBrush="#2C3446" BorderThickness="1" HorizontalAlignment="Center" Margin="0,0,0,20">
+                            <TextBlock Text="🎵" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- Titolo -->
+                        <TextBlock Text="Non c'è ancora nessun suono" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <!-- Descrizione -->
+                        <TextBlock Text="Questa cartella è vuota. Trascina i tuoi file audio (.mp3, .wav) direttamente qui per aggiungerli, oppure usa il menu strumenti in alto per cercarli e scaricarli da internet!" 
+                                   TextWrapping="Wrap" TextAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" LineHeight="18" Margin="0,0,0,24"/>
+                        <!-- Pulsante di importazione rapida -->
+                        <Button Content="➕  Aggiungi il tuo primo suono" Click="ImportButton_Click" HorizontalAlignment="Center" Padding="18,10" Style="{StaticResource FlatButton}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- ===================== Mixer inferiore ===================== -->
@@ -342,6 +544,100 @@
                         </Button>
                     </StackPanel>
                 </Border>
+            </Grid>
+        </Border>
+
+        <!-- Backdrop (semi-trasparente) -->
+        <Border x:Name="DrawerBackdrop" Grid.Row="0" Grid.RowSpan="3" Background="#80000000" Visibility="Collapsed" Opacity="0" MouseDown="DrawerBackdrop_MouseDown"/>
+
+        <!-- Pannello Scorrevole (Drawer) -->
+        <Border x:Name="DrawerPanel" Grid.Row="0" Grid.RowSpan="3" Width="240" HorizontalAlignment="Left" Background="#141822" BorderBrush="#1C2230" BorderThickness="0,0,1,0" Visibility="Collapsed">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="DrawerTransform" X="-240"/>
+            </Border.RenderTransform>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- Header con titolo e bottone chiudi -->
+                    <RowDefinition Height="*"/>      <!-- Lista comandi -->
+                    <RowDefinition Height="Auto"/>   <!-- Footer (versione o info) -->
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Grid.Row="0" BorderBrush="#1C2230" BorderThickness="0,0,0,1" Padding="16,14">
+                    <Grid>
+                        <TextBlock Text="MENU STRUMENTI" FontSize="11" FontWeight="Bold" Foreground="#3498DB" VerticalAlignment="Center"/>
+                        <Button Content="✕" Width="24" Height="24" FontSize="10" Background="Transparent" Foreground="#9AA0AE" HorizontalAlignment="Right" Click="CloseDrawerButton_Click" ToolTip="Chiudi"/>
+                    </Grid>
+                </Border>
+
+                <!-- Comandi / Strumenti -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,10">
+                    <StackPanel Margin="8,0">
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Click="MyInstantsButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🌐" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="Cerca Online" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="Scarica da MyInstants" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="TtsButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🗣️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="TTS (Voce)" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="Sintesi vocale da testo" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="RecorderButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🎤" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="Registra Audio" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="Registra da microfono" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="OpenSoundsFolder_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📁" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="Apri Cartella" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="Gestisci i file audio dell'app" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="DrawerItem_Settings_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚙️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="Impostazioni" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="Configura preferenze e audio" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Scheda Statistiche -->
+                        <Border Background="#161B26" BorderBrush="#252F42" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,24,0,0">
+                            <StackPanel>
+                                <TextBlock Text="📊 STATISTICHE" FontSize="9" FontWeight="Bold" Foreground="#3498DB" Margin="0,0,0,8"/>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Suoni salvati:" FontSize="10.5" Foreground="#9AA0AE"/>
+                                    <TextBlock Text="{Binding AllButtons.Count}" FontSize="10.5" FontWeight="Bold" Foreground="#F1F2F6" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Cartelle create:" FontSize="10.5" Foreground="#9AA0AE"/>
+                                    <TextBlock Text="{Binding Folders.Count}" FontSize="10.5" FontWeight="Bold" Foreground="#F1F2F6" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer -->
+                <TextBlock Grid.Row="2" Text="ThePixelSoundboard v2.5" FontSize="10" Foreground="#4A5260" HorizontalAlignment="Center" Margin="0,16"/>
             </Grid>
         </Border>
     </Grid>
