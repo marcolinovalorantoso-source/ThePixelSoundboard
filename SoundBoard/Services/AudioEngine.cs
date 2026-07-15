@@ -513,9 +513,9 @@ namespace SoundBoard.Services
 
             WaveStream readerMe = OpenReader(filePath);
 
-            if (normalize)
+            if (normalize && readerMe.TotalTime.TotalSeconds < 60)
             {
-                // Calcoliamo il peak usando il reader locale
+                // Calcoliamo il peak usando il reader locale solo per file corti (clip) per evitare delay su file lunghi
                 float peak = GetPeakVolume(readerMe);
                 if (peak > 0.01f)
                 {
