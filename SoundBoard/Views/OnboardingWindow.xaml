@@ -60,9 +60,9 @@
                         <TextBlock Text="🎵" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="ThePixelSoundboard — Setup Iniziale" FontWeight="Bold" Foreground="#3498DB" FontSize="12" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Content="Salta ed entra ✕" HorizontalAlignment="Right" VerticalAlignment="Center" 
-                            Background="Transparent" BorderThickness="0" Foreground="#9AA0AE" FontSize="11" 
-                            Padding="8,4" Click="SkipButton_Click" Cursor="Hand"/>
+                    <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" 
+                            Background="Transparent" BorderThickness="0" Foreground="#F1F2F6" FontSize="16" FontWeight="Bold"
+                            Padding="8,4" Click="SkipButton_Click" Cursor="Hand" ToolTip="Chiudi e Salta"/>
                 </Grid>
             </Border>
 
@@ -111,7 +111,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Inizia Configurazione  🚀" Style="{StaticResource FlatButton}" Background="#3498DB" Foreground="White" 
                                     Padding="20,12" FontSize="14" FontWeight="Bold" Margin="0,0,12,0" Click="NextButton_Click"/>
-                            <Button Content="Sono un Esperto  🛠️" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6" 
+                            <Button Content="Salta Configurazione  ✕" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6" 
                                     Padding="16,12" FontSize="13" FontWeight="SemiBold" Click="ExpertButton_Click"/>
                         </StackPanel>
                     </StackPanel>
@@ -226,7 +226,7 @@
             </Grid>
 
             <!-- Bottom Action Bar -->
-            <Border Grid.Row="2" Background="#14161D" CornerRadius="0,0,16,16" Padding="20,0">
+            <Border x:Name="BottomBar" Grid.Row="2" Background="#14161D" CornerRadius="0,0,16,16" Padding="20,0">
                 <Grid>
                     <!-- Step Progress Indicators (Dots) -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">

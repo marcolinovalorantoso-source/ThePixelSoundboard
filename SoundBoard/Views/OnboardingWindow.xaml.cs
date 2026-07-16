@@ -57,9 +57,9 @@ namespace SoundBoard.Views
 
         private void ExpertButton_Click(object sender, RoutedEventArgs e)
         {
-            _isExpert = true;
-            _currentStep = 1;
-            UpdateStepUI();
+            // Chiude direttamente il setup iniziale
+            this.DialogResult = true;
+            this.Close();
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -146,6 +146,7 @@ namespace SoundBoard.Views
             }
 
             // Buttons state
+            BottomBar.Visibility = _currentStep == 0 ? Visibility.Collapsed : Visibility.Visible;
             BackButton.Visibility = _currentStep == 0 ? Visibility.Collapsed : Visibility.Visible;
             if (_isExpert && _currentStep == 1)
             {
