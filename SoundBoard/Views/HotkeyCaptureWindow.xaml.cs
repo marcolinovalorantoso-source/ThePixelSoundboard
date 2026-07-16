@@ -31,11 +31,7 @@ namespace SoundBoard.Views
             }
 
             var modifiers = Keyboard.Modifiers;
-            if (modifiers == ModifierKeys.None)
-            {
-                GestureText.Text = "Serve almeno un modificatore (Ctrl/Alt/Shift)";
-                return;
-            }
+
 
             _capturedGesture = HotkeyManager.BuildGestureString(modifiers, key);
             GestureText.Text = _capturedGesture;
