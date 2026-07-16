@@ -47,6 +47,9 @@ namespace SoundBoard.Models
         /// <summary>Hotkey globale per fermare tutti i suoni.</summary>
         public string? StopAllHotkeyGesture { get; set; } = null;
 
+        /// <summary>Hotkey globale per mettere in pausa tutti i suoni.</summary>
+        public string? PauseAllHotkeyGesture { get; set; } = null;
+
         /// <summary>Indica se l'utente ha completato il tutorial/setup iniziale.</summary>
         public bool IsOnboarded { get; set; } = false;
     }

@@ -122,6 +122,7 @@ namespace SoundBoard.Views
                                 }
 
                                 StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.StopAllHotkeyGesture) ? "Nessuna" : _viewModel.StopAllHotkeyGesture;
+                                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.PauseAllHotkeyGesture) ? "Nessuna" : _viewModel.PauseAllHotkeyGesture;
 
                                 OutputFriendsComboBox.IsEnabled = true;
                                 OutputMeComboBox.IsEnabled = true;
@@ -193,6 +194,16 @@ namespace SoundBoard.Views
             {
                 _viewModel.StopAllHotkeyGesture = dialog.ResultGesture;
                 StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? "Nessuna" : dialog.ResultGesture;
+            }
+        }
+
+        private void AssignPauseAllHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new HotkeyCaptureWindow(_viewModel.PauseAllHotkeyGesture) { Owner = this };
+            if (dialog.ShowDialog() == true)
+            {
+                _viewModel.PauseAllHotkeyGesture = dialog.ResultGesture;
+                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? "Nessuna" : dialog.ResultGesture;
             }
         }
 

@@ -149,6 +149,16 @@
             </StackPanel>
         </StackPanel>
 
+        <!-- Hotkey Globale Pausa Tutto -->
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="Scorciatoia Globale per Pausa Suoni:" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="⏸ Assegna Pausa" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
+                        Padding="12,6" Click="AssignPauseAllHotkey_Click"/>
+                <TextBlock x:Name="PauseAllHotkeyTextBlock" Text="Nessuna" Foreground="#5BE56B" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="Bold"/>
+            </StackPanel>
+        </StackPanel>
+
         <TextBlock Text="Le impostazioni vengono salvate automaticamente."
                    Foreground="#F1F2F6" FontStyle="Italic" Margin="0,0,0,10"/>
 

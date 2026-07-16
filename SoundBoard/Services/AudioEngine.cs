@@ -52,6 +52,7 @@ namespace SoundBoard.Services
             public bool IsMuted;
             public bool IsPaused;
             public double VolumeBeforeMute = 1.0;
+            public float NormalizationGain = 1.0f;
         }
 
         private List<string> GetMMDeviceNames(NAudio.CoreAudioApi.DataFlow flow)
@@ -563,7 +564,8 @@ namespace SoundBoard.Services
                     VolumeMe = volumeProviderMe,
                     ReaderMe = readerMe,
                     PauseMe = pauseMe,
-                    MeEnded = !playToMe
+                    MeEnded = !playToMe,
+                    NormalizationGain = normalizationGain
                 };
             }
 
@@ -642,7 +644,7 @@ namespace SoundBoard.Services
             {
                 if (_activeSounds.TryGetValue(buttonId, out var active) && !active.IsMuted)
                 {
-                    float vol = (float)Math.Clamp(volume, 0.0, 1.0);
+                    float vol = (float)Math.Clamp(volume, 0.0, 1.0) * active.NormalizationGain;
                     if (active.VolumeFriends != null) active.VolumeFriends.Volume = vol;
                     active.VolumeMe.Volume = vol;
                 }
@@ -655,7 +657,7 @@ namespace SoundBoard.Services
             {
                 if (!_activeSounds.TryGetValue(buttonId, out var active)) return;
                 active.IsMuted = muted;
-                float vol = muted ? 0f : (float)currentSliderVolume;
+                float vol = muted ? 0f : (float)currentSliderVolume * active.NormalizationGain;
                 if (active.VolumeFriends != null) active.VolumeFriends.Volume = vol;
                 active.VolumeMe.Volume = vol;
             }

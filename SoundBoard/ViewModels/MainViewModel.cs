@@ -319,6 +319,23 @@ namespace SoundBoard.ViewModels
             catch { }
         }
 
+        public void PauseAll()
+        {
+            try
+            {
+                var playing = PlayingSounds.ToList();
+                foreach (var vm in playing)
+                {
+                    if (!vm.IsPaused)
+                    {
+                        _audioEngine.Pause(vm.Id);
+                        vm.IsPaused = true;
+                    }
+                }
+            }
+            catch { }
+        }
+
         public void ClearAllSounds()
         {
             StopAll();
@@ -519,6 +536,7 @@ namespace SoundBoard.ViewModels
             foreach (var vm in AllButtons)
                 RegisterHotkeyIfPresent(vm);
             RegisterStopAllHotkey();
+            RegisterPauseAllHotkey();
         }
 
         private void RegisterStopAllHotkey()
@@ -528,6 +546,16 @@ namespace SoundBoard.ViewModels
             {
                 _hotkeyManager.Register("GLOBAL_STOP_ALL", StopAllHotkeyGesture, () =>
                     Application.Current?.Dispatcher.Invoke(() => StopAll()));
+            }
+        }
+
+        private void RegisterPauseAllHotkey()
+        {
+            _hotkeyManager.Unregister("GLOBAL_PAUSE_ALL");
+            if (!string.IsNullOrEmpty(PauseAllHotkeyGesture))
+            {
+                _hotkeyManager.Register("GLOBAL_PAUSE_ALL", PauseAllHotkeyGesture, () =>
+                    Application.Current?.Dispatcher.Invoke(() => PauseAll()));
             }
         }
 
@@ -643,6 +671,19 @@ namespace SoundBoard.ViewModels
                 RegisterStopAllHotkey();
                 SaveState();
                 OnPropertyChanged(nameof(StopAllHotkeyGesture));
+            }
+        }
+
+        public string? PauseAllHotkeyGesture
+        {
+            get => _settings.PauseAllHotkeyGesture;
+            set
+            {
+                if (_settings.PauseAllHotkeyGesture == value) return;
+                _settings.PauseAllHotkeyGesture = value;
+                RegisterPauseAllHotkey();
+                SaveState();
+                OnPropertyChanged(nameof(PauseAllHotkeyGesture));
             }
         }
 
