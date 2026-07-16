@@ -282,18 +282,23 @@ namespace SoundBoard.Views
                 return;
             }
 
-            string tempOut = Path.Combine(Path.GetDirectoryName(_filePath) ?? "", "trim_" + Path.GetFileName(_filePath));
+            string newFileName = "trim_" + Guid.NewGuid().ToString("N").Substring(0, 8) + "_" + Path.GetFileName(_filePath);
+            string tempOut = Path.Combine(Path.GetDirectoryName(_filePath) ?? "", newFileName);
             try
             {
                 CropAudioFile(_filePath, tempOut, TimeSpan.FromSeconds(start), TimeSpan.FromSeconds(end));
 
-                // Sostituiamo il file originale
-                // Per evitare problemi di blocco, facciamo un piccolo giro di disposals e attendiamo un attimo
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                // Creiamo un nuovo pulsante per la clip tagliata anziché sovrascrivere l'originale
+                var newModel = new Models.SoundButtonModel
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "(Tagliato) " + _soundVm.Name,
+                    FilePath = tempOut,
+                    Color = _soundVm.Color,
+                    Volume = _soundVm.Volume
+                };
 
-                File.Delete(_filePath);
-                File.Move(tempOut, _filePath);
+                _mainVm.AddButton(newModel);
 
                 DialogResult = true;
                 Close();

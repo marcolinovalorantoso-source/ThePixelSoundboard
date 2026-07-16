@@ -246,7 +246,7 @@ namespace SoundBoard.ViewModels
         private int _paletteIndex;
         private string PickRandomColor() => Palette[_paletteIndex++ % Palette.Length];
 
-        private void AddButton(SoundButtonModel model)
+        public void AddButton(SoundButtonModel model)
         {
             var vm = new SoundButtonViewModel(model);
             HookButtonEvents(vm);
