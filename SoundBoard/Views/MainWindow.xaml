@@ -69,6 +69,7 @@
                     <ContextMenu>
                         <MenuItem Header="✏️ Modifica" Click="EditMenuItem_Click"/>
                         <MenuItem Header="✂️ Taglia Audio" Click="TrimMenuItem_Click"/>
+                        <MenuItem Header="📁 Apri percorso file" Click="OpenFileLocationMenuItem_Click"/>
                         <MenuItem Header="⌨️ Assegna hotkey" Click="HotkeyMenuItem_Click"/>
                         <MenuItem Header="⭐ Preferito" Click="FavoriteMenuItem_Click"/>
                         <Separator/>

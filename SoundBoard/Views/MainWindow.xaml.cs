@@ -129,6 +129,21 @@ namespace SoundBoard.Views
             if (GetVmFromMenuItem(sender) is { } vm) OpenTrimWindow(vm);
         }
 
+        private void OpenFileLocationMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetVmFromMenuItem(sender) is { } vm)
+            {
+                if (System.IO.File.Exists(vm.FilePath))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{vm.FilePath}\"");
+                }
+                else
+                {
+                    MessageBox.Show("Il file audio non è stato trovato sul disco.", "File non trovato", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+
         private void HotkeyMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (GetVmFromMenuItem(sender) is not { } vm) return;
