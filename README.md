@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**La soundboard definitiva per i ThePixelBoys — Semplice, leggera e potente**
+**La soundboard desktop definitiva — Open Source, semplice, leggera e potente**
 
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-blue?logo=windows)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple?logo=dotnet)
@@ -56,6 +56,13 @@ ThePixelSoundboard funziona misando l'audio della soundboard e la tua voce in un
 4. Su Discord → Impostazioni → Voce e video → Imposta come dispositivo di ingresso lo stesso cavo virtuale (es. CABLE Output).
 
 *Se sei un utente esperto, puoi saltare l'introduzione guidata usando il tasto dedicato **"Sono un Esperto"** per andare subito alla selezione dei dispositivi.*
+
+---
+
+## 🛠️ Requisiti di sistema
+* Windows 10 o Windows 11
+* .NET Runtime 8.0 (scaricato automaticamente se assente)
+* Driver VB-Audio Cable (consigliato per Discord)
 
 ---
 
@@ -124,5 +131,5 @@ Distribuito sotto licenza **MIT**. Vedi [LICENSE](LICENSE) per i dettagli.
 ---
 
 <div align="center">
-Fatto con ❤️ per i <b>ThePixelBoys</b> 🎮
+Nato con ❤️ per il server Discord <b>ThePixelBoys</b> e aperto a tutti! 🎮
 </div>

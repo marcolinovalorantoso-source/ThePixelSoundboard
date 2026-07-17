@@ -89,7 +89,7 @@
                                 <Border Width="110" Height="110" CornerRadius="55" Background="#1B1D23" BorderBrush="#3498DB" BorderThickness="2" Margin="0,0,0,20">
                                     <TextBlock Text="🎧" FontSize="56" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="ThePixelBoys" HorizontalAlignment="Center" FontWeight="Bold" Foreground="#3498DB" FontSize="16"/>
+                                <TextBlock Text="ThePixelSoundboard" HorizontalAlignment="Center" FontWeight="Bold" Foreground="#3498DB" FontSize="16"/>
                                 <TextBlock Text="Soundboard v3.0.0" HorizontalAlignment="Center" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Grid>

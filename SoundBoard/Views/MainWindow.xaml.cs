@@ -397,7 +397,7 @@ namespace SoundBoard.Views
             {
                 _logoClickCount = 0;
                 MessageBox.Show(
-                    "Creato da Marco Venditti per esigenza del nostro discord privato ThePixelBoys",
+                    "Nato per il server Discord ThePixelBoys e ora libero e Open Source per tutti!",
                     "ThePixelSoundboard - Easter Egg",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
