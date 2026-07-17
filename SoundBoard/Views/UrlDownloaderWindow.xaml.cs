@@ -211,39 +211,24 @@ namespace SoundBoard.Views
 
                 StatusTextBlock.Text = string.Format(L10n.Instance.DownloadingTitle, videoTitle);
 
-                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, tempYtFilePathWithoutExt));
+                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, tempYtFilePathWithoutExt, startSpan, endSpan));
 
                 if (success && File.Exists(tempYtMp3Path))
                 {
+                    // Since it was downloaded via --download-sections, it is already trimmed correctly!
+                    if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
+                    File.Move(tempYtMp3Path, finalMp3Path, true);
+                    _viewModel.ImportFile(finalMp3Path);
+
                     if (startSpan != null || endSpan != null)
                     {
-                        StatusTextBlock.Text = L10n.Instance.TrimmingAudio;
-                        bool cropSuccess = CropAudioFfmpeg(tempYtMp3Path, finalMp3Path, startSpan, endSpan);
-                        if (cropSuccess && File.Exists(finalMp3Path))
-                        {
-                            try { File.Delete(tempYtMp3Path); } catch { }
-                            _viewModel.ImportFile(finalMp3Path);
-                            MessageBox.Show(L10n.Instance.SoundDownloadedTrimmedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
-                            Close();
-                        }
-                        else
-                        {
-                            // Fallback: import the full file
-                            if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
-                            File.Move(tempYtMp3Path, finalMp3Path, true);
-                            _viewModel.ImportFile(finalMp3Path);
-                            MessageBox.Show(L10n.Instance.TrimFailedFallback, L10n.Instance.TrimFailed, MessageBoxButton.OK, MessageBoxImage.Warning);
-                            Close();
-                        }
+                        MessageBox.Show(L10n.Instance.SoundDownloadedTrimmedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
-                        File.Move(tempYtMp3Path, finalMp3Path, true);
-                        _viewModel.ImportFile(finalMp3Path);
                         MessageBox.Show(L10n.Instance.SoundDownloadedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
-                        Close();
                     }
+                    Close();
                 }
                 else
                 {
@@ -297,15 +282,23 @@ namespace SoundBoard.Views
             }
         }
 
-        private (bool Success, string ErrorLog) DownloadAudio(string url, string outputTemplate)
+        private (bool Success, string ErrorLog) DownloadAudio(string url, string outputTemplate, TimeSpan? start, TimeSpan? end)
         {
             try
             {
+                string downloadSectionsArg = "";
+                if (start != null || end != null)
+                {
+                    double sSec = start?.TotalSeconds ?? 0;
+                    string eSecStr = end != null ? end.Value.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture) : "inf";
+                    downloadSectionsArg = $" --download-sections \"*{sSec.ToString(System.Globalization.CultureInfo.InvariantCulture)}-{eSecStr}\"";
+                }
+
                 // yt-dlp download options for extracting mp3
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "yt-dlp",
-                    Arguments = $"--impersonate chrome --extract-audio --audio-format mp3 --audio-quality 0 -o \"{outputTemplate}.%(ext)s\" \"{url}\"",
+                    Arguments = $"--impersonate chrome{downloadSectionsArg} --extract-audio --audio-format mp3 --audio-quality 0 -o \"{outputTemplate}.%(ext)s\" \"{url}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,

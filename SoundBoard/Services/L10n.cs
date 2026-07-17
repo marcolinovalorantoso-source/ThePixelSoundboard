@@ -233,9 +233,9 @@ namespace SoundBoard.Services
         public string UrlDesc => GetString("Incolla un link di YouTube, TikTok o altri siti supportati per scaricare l'audio direttamente in MP3.", "Paste a link from YouTube, TikTok, or other supported sites to download the audio directly as MP3.", "Collez un lien YouTube, TikTok ou d'autres sites supportés pour télécharger l'audio directement en MP3.", "Füge einen Link von YouTube, TikTok oder anderen unterstützten Seiten ein, um Audio direkt als MP3 herunterzuladen.");
         public string UrlPlaceholder => GetString("Incolla il link del video qui (es: https://www.youtube.com/watch?v=...)", "Paste the video link here (e.g., https://www.youtube.com/watch?v=...)", "Collez le lien de la vidéo ici (ex: https://www.youtube.com/watch?v=...)", "Videolink hier einfügen (z.B. https://www.youtube.com/watch?v=...)");
         public string StartCutOptional => GetString("Taglio Inizio (opzionale):", "Start Cut (optional):", "Début du découpage (optionnel):", "Schnittpunkt Start (optional):");
-        public string StartCutPlaceholder => GetString("es. 00:10 o 10", "e.g. 00:10 or 10", "ex. 00:10 ou 10", "z.B. 00:10 oder 10");
+        public string StartCutPlaceholder => GetString("es. 00:00:10 o 10", "e.g. 00:00:10 or 10", "ex. 00:00:10 ou 10", "z.B. 00:00:10 oder 10");
         public string EndCutOptional => GetString("Taglio Fine (opzionale):", "End Cut (optional):", "Fin du découpage (optionnel):", "Schnittpunkt Ende (optional):");
-        public string EndCutPlaceholder => GetString("es. 00:15 o 15", "e.g. 00:15 or 15", "ex. 00:15 ou 15", "z.B. 00:15 oder 15");
+        public string EndCutPlaceholder => GetString("es. 00:00:15 o 15", "e.g. 00:00:15 or 15", "ex. 00:00:15 ou 15", "z.B. 00:00:15 oder 15");
         public string Downloading => GetString("Download in corso...", "Downloading...", "Téléchargement en cours...", "Wird heruntergeladen...");
         public string ReadyToDownload => GetString("Pronto per il download.", "Ready to download.", "Prêt à télécharger.", "Bereit zum Herunterladen.");
         public string DownloadMp3 => GetString("Scarica MP3  📥", "Download MP3  📥", "Télécharger MP3  📥", "MP3 herunterladen  📥");

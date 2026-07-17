@@ -147,7 +147,14 @@ namespace SoundBoard.ViewModels
         {
             var cur = System.TimeSpan.FromSeconds(CurrentTimeSeconds);
             var tot = System.TimeSpan.FromSeconds(TotalTimeSeconds);
-            TimeDisplay = $"{cur:mm\\:ss} / {tot:mm\\:ss}";
+            if (tot.TotalHours >= 1)
+            {
+                TimeDisplay = $"{cur:hh\\:mm\\:ss} / {tot:hh\\:mm\\:ss}";
+            }
+            else
+            {
+                TimeDisplay = $"{cur:mm\\:ss} / {tot:mm\\:ss}";
+            }
         }
 
         public void SeekTo(double seconds)
