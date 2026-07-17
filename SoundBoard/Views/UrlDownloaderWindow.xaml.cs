@@ -120,7 +120,7 @@ namespace SoundBoard.Views
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "yt-dlp",
-                    Arguments = $"--get-title \"{url}\"",
+                    Arguments = $"--impersonate chrome --get-title \"{url}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -149,7 +149,7 @@ namespace SoundBoard.Views
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "yt-dlp",
-                    Arguments = $"--extract-audio --audio-format mp3 --audio-quality 0 -o \"{outputTemplate}.%(ext)s\" \"{url}\"",
+                    Arguments = $"--impersonate chrome --extract-audio --audio-format mp3 --audio-quality 0 -o \"{outputTemplate}.%(ext)s\" \"{url}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
