@@ -215,10 +215,18 @@ namespace SoundBoard.Views
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        DownloadProgressBar.IsIndeterminate = false;
-                        DownloadProgressBar.Value = pct;
-                        string baseText = string.Format(L10n.Instance.DownloadingTitle, videoTitle);
-                        StatusTextBlock.Text = $"{baseText} - {pct:F1}% {status}";
+                        if (status == "Converting...")
+                        {
+                            DownloadProgressBar.IsIndeterminate = true;
+                            StatusTextBlock.Text = L10n.Instance.ProcessingAudio;
+                        }
+                        else
+                        {
+                            DownloadProgressBar.IsIndeterminate = false;
+                            DownloadProgressBar.Value = pct;
+                            string baseText = string.Format(L10n.Instance.DownloadingTitle, videoTitle);
+                            StatusTextBlock.Text = $"{baseText} - {pct:F1}% {status}";
+                        }
                     });
                 }));
 
@@ -331,24 +339,31 @@ namespace SoundBoard.Views
                         
                         // Parse progress
                         // Example: [download]   1.9% of ~  97.64MiB at  202.09KiB/s ETA 10:34
-                        if (line.Contains("[download]") && progressCallback != null)
+                        if (progressCallback != null)
                         {
-                            var matchPercent = Regex.Match(line, @"(\d+(?:\.\d+)?)%");
-                            var matchSpeed = Regex.Match(line, @"at\s+(\d+(?:\.\d+)?\s*\w+/s)");
-                            var matchEta = Regex.Match(line, @"ETA\s+(\d{2}:\d{2}(?::\d{2})?)");
-                            
-                            if (matchPercent.Success)
+                            if (line.Contains("[ExtractAudio]") || line.Contains("[ffmpeg]") || line.Contains("[Merger]") || line.Contains("Converting"))
                             {
-                                double pct = double.Parse(matchPercent.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
-                                string speed = matchSpeed.Success ? matchSpeed.Groups[1].Value : "";
-                                string eta = matchEta.Success ? matchEta.Groups[1].Value : "";
-                                string status = "";
-                                if (!string.IsNullOrEmpty(speed) && !string.IsNullOrEmpty(eta))
-                                    status = $"({speed} - ETA {eta})";
-                                else if (!string.IsNullOrEmpty(speed))
-                                    status = $"({speed})";
+                                progressCallback(100.0, "Converting...");
+                            }
+                            else if (line.Contains("[download]"))
+                            {
+                                var matchPercent = Regex.Match(line, @"(\d+(?:\.\d+)?)%");
+                                var matchSpeed = Regex.Match(line, @"at\s+(\d+(?:\.\d+)?\s*\w+/s)");
+                                var matchEta = Regex.Match(line, @"ETA\s+(\d{2}:\d{2}(?::\d{2})?)");
                                 
-                                progressCallback(pct, status);
+                                if (matchPercent.Success)
+                                {
+                                    double pct = double.Parse(matchPercent.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                    string speed = matchSpeed.Success ? matchSpeed.Groups[1].Value : "";
+                                    string eta = matchEta.Success ? matchEta.Groups[1].Value : "";
+                                    string status = "";
+                                    if (!string.IsNullOrEmpty(speed) && !string.IsNullOrEmpty(eta))
+                                        status = $"({speed} - ETA {eta})";
+                                    else if (!string.IsNullOrEmpty(speed))
+                                        status = $"({speed})";
+                                    
+                                    progressCallback(pct, status);
+                                }
                             }
                         }
                     }
