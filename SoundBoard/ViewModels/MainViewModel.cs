@@ -407,8 +407,9 @@ namespace SoundBoard.ViewModels
         {
             if (string.IsNullOrEmpty(vm.FilePath) || !File.Exists(vm.FilePath))
             {
-                MessageBox.Show($"File non trovato:\n{vm.FilePath}", "SoundBoard",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Il file per '{vm.Name}' non esiste più sul disco.\nIl pulsante verrà rimosso automaticamente dalla Soundboard.", "File non trovato",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                DeleteButton(vm);
                 return;
             }
             try
@@ -742,12 +743,26 @@ namespace SoundBoard.ViewModels
             _settings = _settingsService.Load();
             foreach (var folder in _settings.Folders)
                 Folders.Add(folder);
+
+            var validButtons = new List<Models.SoundButtonModel>();
             foreach (var buttonModel in _settings.Buttons)
             {
-                var vm = new SoundButtonViewModel(buttonModel);
-                HookButtonEvents(vm);
-                AllButtons.Add(vm);
-            }            SelectedFolder = Folders.FirstOrDefault(f => f.Id == _settings.LastSelectedFolderId);
+                if (System.IO.File.Exists(buttonModel.FilePath))
+                {
+                    validButtons.Add(buttonModel);
+                    var vm = new SoundButtonViewModel(buttonModel);
+                    HookButtonEvents(vm);
+                    AllButtons.Add(vm);
+                }
+            }
+
+            if (_settings.Buttons.Count != validButtons.Count)
+            {
+                _settings.Buttons = validButtons;
+                SaveState();
+            }
+
+            SelectedFolder = Folders.FirstOrDefault(f => f.Id == _settings.LastSelectedFolderId);
             _masterVolume = _settings.MasterVolume;
             _previewVolume = _settings.PreviewVolume;
 
