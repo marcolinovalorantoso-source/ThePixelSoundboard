@@ -15,6 +15,8 @@ namespace SoundBoard.Views
     {
         private readonly MainViewModel _viewModel;
         private const string PlaceholderText = "Incolla il link del video qui (es: https://www.youtube.com/watch?v=...)";
+        private const string StartPlaceholder = "es. 00:10 o 10";
+        private const string EndPlaceholder = "es. 00:15 o 15";
 
         public UrlDownloaderWindow(MainViewModel viewModel)
         {
@@ -25,6 +27,12 @@ namespace SoundBoard.Views
             // Initialize placeholder
             UrlTextBox.Text = PlaceholderText;
             UrlTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+
+            StartTextBox.Text = StartPlaceholder;
+            StartTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+
+            EndTextBox.Text = EndPlaceholder;
+            EndTextBox.Foreground = System.Windows.Media.Brushes.Gray;
         }
 
         private void UrlTextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -50,6 +58,42 @@ namespace SoundBoard.Views
             Close();
         }
 
+        private void StartTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (StartTextBox.Text == StartPlaceholder)
+            {
+                StartTextBox.Text = "";
+                StartTextBox.Foreground = (System.Windows.Media.Brush)FindResource("TextPrimaryBrush");
+            }
+        }
+
+        private void StartTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(StartTextBox.Text))
+            {
+                StartTextBox.Text = StartPlaceholder;
+                StartTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+            }
+        }
+
+        private void EndTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (EndTextBox.Text == EndPlaceholder)
+            {
+                EndTextBox.Text = "";
+                EndTextBox.Foreground = (System.Windows.Media.Brush)FindResource("TextPrimaryBrush");
+            }
+        }
+
+        private void EndTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(EndTextBox.Text))
+            {
+                EndTextBox.Text = EndPlaceholder;
+                EndTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+            }
+        }
+
         private async void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
             string url = UrlTextBox.Text.Trim();
@@ -62,6 +106,30 @@ namespace SoundBoard.Views
             // UI feedback
             SetLoadingState(true);
 
+            // Parse Trim Options
+            TimeSpan? startSpan = ParseTime(StartTextBox.Text, StartPlaceholder);
+            TimeSpan? endSpan = ParseTime(EndTextBox.Text, EndPlaceholder);
+
+            // Validation of trim values
+            if (StartTextBox.Text != StartPlaceholder && !string.IsNullOrWhiteSpace(StartTextBox.Text) && startSpan == null)
+            {
+                MessageBox.Show("Il tempo di inizio inserito non è valido. Usa il formato secondi (es. 10) o minuti:secondi (es. 01:20).", "Errore Formato Tempo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SetLoadingState(false);
+                return;
+            }
+            if (EndTextBox.Text != EndPlaceholder && !string.IsNullOrWhiteSpace(EndTextBox.Text) && endSpan == null)
+            {
+                MessageBox.Show("Il tempo di fine inserito non è valido. Usa il formato secondi (es. 15) o minuti:secondi (es. 01:25).", "Errore Formato Tempo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SetLoadingState(false);
+                return;
+            }
+            if (startSpan != null && endSpan != null && startSpan >= endSpan)
+            {
+                MessageBox.Show("Il tempo di inizio deve essere inferiore al tempo di fine.", "Errore Selezione Tempo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SetLoadingState(false);
+                return;
+            }
+
             try
             {
                 // Se è un link TikTok, proviamo prima con TikWM API (molto più robusto per aggirare i login di TikTok)
@@ -72,18 +140,40 @@ namespace SoundBoard.Views
                     string destFolder = Path.Combine(appDataFolder, "Sounds");
                     Directory.CreateDirectory(destFolder);
 
+                    string sanitizedTiktokTitle = "TikTok_Audio_" + Guid.NewGuid().ToString("N").Substring(0, 6);
+                    string finalTiktokMp3Path = Path.Combine(destFolder, sanitizedTiktokTitle + ".mp3");
+
+                    // Download to a temp file first, then crop if needed
+                    string tempPath = Path.Combine(destFolder, sanitizedTiktokTitle + "_temp.mp3");
+
                     var (tiktokSuccess, tiktokTitle, tiktokErrorOrPath) = await TryDownloadTikTokAsync(url, destFolder);
                     if (tiktokSuccess && File.Exists(tiktokErrorOrPath))
                     {
-                        _viewModel.ImportFile(tiktokErrorOrPath);
-                        MessageBox.Show("Suono scaricato da TikTok ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
-                        Close();
-                        return;
+                        // tiktokErrorOrPath contains the downloaded full file
+                        if (startSpan != null || endSpan != null)
+                        {
+                            StatusTextBlock.Text = "Taglio audio in corso...";
+                            bool cropSuccess = CropAudioFfmpeg(tiktokErrorOrPath, finalTiktokMp3Path, startSpan, endSpan);
+                            try { File.Delete(tiktokErrorOrPath); } catch { }
+
+                            if (cropSuccess && File.Exists(finalTiktokMp3Path))
+                            {
+                                _viewModel.ImportFile(finalTiktokMp3Path);
+                                MessageBox.Show("Suono scaricato da TikTok, tagliato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                                Close();
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            _viewModel.ImportFile(tiktokErrorOrPath);
+                            MessageBox.Show("Suono scaricato da TikTok ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Close();
+                            return;
+                        }
                     }
-                    else
-                    {
-                        StatusTextBlock.Text = "TikWM non riuscito. Provo a ripiegare su yt-dlp...";
-                    }
+                    
+                    StatusTextBlock.Text = "TikWM non riuscito. Provo a ripiegare su yt-dlp...";
                 }
 
                 StatusTextBlock.Text = "Verifica link e caricamento informazioni...";
@@ -102,16 +192,44 @@ namespace SoundBoard.Views
                 Directory.CreateDirectory(destFolder2);
                 string destFilePathWithoutExt = Path.Combine(destFolder2, sanitizedTitle);
                 string finalMp3Path = destFilePathWithoutExt + ".mp3";
+                string tempYtFilePathWithoutExt = destFilePathWithoutExt + "_temp";
+                string tempYtMp3Path = tempYtFilePathWithoutExt + ".mp3";
 
                 StatusTextBlock.Text = $"Download in corso: {videoTitle}...";
 
-                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, destFilePathWithoutExt));
+                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, tempYtFilePathWithoutExt));
 
-                if (success && File.Exists(finalMp3Path))
+                if (success && File.Exists(tempYtMp3Path))
                 {
-                    _viewModel.ImportFile(finalMp3Path);
-                    MessageBox.Show("Suono scaricato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
-                    Close();
+                    if (startSpan != null || endSpan != null)
+                    {
+                        StatusTextBlock.Text = "Taglio audio in corso...";
+                        bool cropSuccess = CropAudioFfmpeg(tempYtMp3Path, finalMp3Path, startSpan, endSpan);
+                        if (cropSuccess && File.Exists(finalMp3Path))
+                        {
+                            try { File.Delete(tempYtMp3Path); } catch { }
+                            _viewModel.ImportFile(finalMp3Path);
+                            MessageBox.Show("Suono scaricato, tagliato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Close();
+                        }
+                        else
+                        {
+                            // Fallback: import the full file
+                            if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
+                            File.Move(tempYtMp3Path, finalMp3Path, true);
+                            _viewModel.ImportFile(finalMp3Path);
+                            MessageBox.Show("Download completato ma il taglio audio è fallito. Il file è stato importato intero.", "Taglio Fallito", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            Close();
+                        }
+                    }
+                    else
+                    {
+                        if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
+                        File.Move(tempYtMp3Path, finalMp3Path, true);
+                        _viewModel.ImportFile(finalMp3Path);
+                        MessageBox.Show("Suono scaricato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                        Close();
+                    }
                 }
                 else
                 {
@@ -285,6 +403,75 @@ namespace SoundBoard.Views
             string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
             string invalidRegStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
             return Regex.Replace(name, invalidRegStr, "_");
+        }
+
+        private TimeSpan? ParseTime(string text, string placeholder)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text == placeholder) return null;
+            text = text.Trim();
+
+            // Cerca di parsare direttamente come secondi (es. "10" o "10.5")
+            if (double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double secs))
+            {
+                return TimeSpan.FromSeconds(secs);
+            }
+
+            // Cerca di parsare formati mm:ss o hh:mm:ss
+            string[] parts = text.Split(':');
+            if (parts.Length == 2) // mm:ss
+            {
+                if (int.TryParse(parts[0], out int m) && double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double s))
+                {
+                    return TimeSpan.FromMinutes(m) + TimeSpan.FromSeconds(s);
+                }
+            }
+            else if (parts.Length == 3) // hh:mm:ss
+            {
+                if (int.TryParse(parts[0], out int h) && int.TryParse(parts[1], out int m) && double.TryParse(parts[2], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double s))
+                {
+                    return TimeSpan.FromHours(h) + TimeSpan.FromMinutes(m) + TimeSpan.FromSeconds(s);
+                }
+            }
+
+            return null;
+        }
+
+        private bool CropAudioFfmpeg(string inputPath, string outputPath, TimeSpan? start, TimeSpan? end)
+        {
+            try
+            {
+                string args = "-y ";
+                if (start != null)
+                {
+                    args += $"-ss {start.Value.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)} ";
+                }
+                if (end != null)
+                {
+                    args += $"-to {end.Value.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)} ";
+                }
+                args += $"-i \"{inputPath}\" -c copy \"{outputPath}\"";
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "ffmpeg",
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (var process = Process.Start(startInfo))
+                {
+                    if (process == null) return false;
+                    process.WaitForExit();
+                    return process.ExitCode == 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
