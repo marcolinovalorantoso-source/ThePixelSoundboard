@@ -81,7 +81,7 @@ namespace SoundBoard.Views
 
                 StatusTextBlock.Text = $"Download in corso: {videoTitle}...";
 
-                bool success = await Task.Run(() => DownloadAudio(url, destFilePathWithoutExt));
+                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, destFilePathWithoutExt));
 
                 if (success && File.Exists(finalMp3Path))
                 {
@@ -91,7 +91,7 @@ namespace SoundBoard.Views
                 }
                 else
                 {
-                    MessageBox.Show("Impossibile scaricare l'audio. Assicurati che il link sia valido e che yt-dlp/ffmpeg siano installati sul tuo computer.", 
+                    MessageBox.Show($"Impossibile scaricare l'audio. Assicurati che il link sia valido.\n\nDettagli errore:\n{errorLog}", 
                         "Errore di Download", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -141,7 +141,7 @@ namespace SoundBoard.Views
             }
         }
 
-        private bool DownloadAudio(string url, string outputTemplate)
+        private (bool Success, string ErrorLog) DownloadAudio(string url, string outputTemplate)
         {
             try
             {
@@ -158,14 +158,16 @@ namespace SoundBoard.Views
 
                 using (var process = Process.Start(startInfo))
                 {
-                    if (process == null) return false;
+                    if (process == null) return (false, "Impossibile avviare il processo yt-dlp.");
+                    string stdout = process.StandardOutput.ReadToEnd();
+                    string stderr = process.StandardError.ReadToEnd();
                     process.WaitForExit();
-                    return process.ExitCode == 0;
+                    return (process.ExitCode == 0, string.IsNullOrEmpty(stderr) ? stdout : stderr);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return (false, ex.Message);
             }
         }
 
