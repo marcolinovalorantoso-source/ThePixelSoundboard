@@ -33,6 +33,8 @@ namespace SoundBoard.Views
 
             SoundBoard.Services.ThemeService.ApplyDarkTheme(this);
 
+            Activated += MainWindow_Activated;
+
             Loaded += async (sender, e) =>
             {
                 _viewModel.AttachHotkeysToWindow(this);
@@ -488,6 +490,11 @@ namespace SoundBoard.Views
             CloseDrawer();
             var dialog = new UrlDownloaderWindow(_viewModel) { Owner = this };
             dialog.ShowDialog();
+        }
+
+        private void MainWindow_Activated(object? sender, EventArgs e)
+        {
+            _viewModel?.CleanupMissingFiles();
         }
     }
 }

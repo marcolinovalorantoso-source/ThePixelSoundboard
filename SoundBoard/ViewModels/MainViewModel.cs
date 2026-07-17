@@ -786,6 +786,19 @@ namespace SoundBoard.ViewModels
 
         public void SaveState() => _settingsService.Save(_settings);
 
+        public void CleanupMissingFiles()
+        {
+            try
+            {
+                var missing = AllButtons.Where(vm => string.IsNullOrEmpty(vm.FilePath) || !System.IO.File.Exists(vm.FilePath)).ToList();
+                foreach (var vm in missing)
+                {
+                    DeleteButton(vm);
+                }
+            }
+            catch { }
+        }
+
         public void PersistWindowSize(double width, double height)
         {
             _settings.WindowWidth = width;
