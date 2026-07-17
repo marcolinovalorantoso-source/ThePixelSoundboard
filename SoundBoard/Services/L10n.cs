@@ -335,5 +335,67 @@ namespace SoundBoard.Services
         public string AudioInitError => GetString("Errore inizializzazione audio:\n", "Audio initialization error:\n");
         public string UnexpectedErrorOccurred => GetString("Si è verificato un errore imprevisto:\n", "An unexpected error occurred:\n");
         public string SoundboardError => GetString("SoundBoard - Errore", "SoundBoard - Error");
+
+        // ================= MISSING ALIASES AND PROPERTIES =================
+        public string EditMenu => GetString("✏️ Modifica", "✏️ Edit");
+        public string OpenToolsMenu => GetString("Menu Strumenti", "Tools Menu");
+        public string SearchPlaceholder => GetString("🔍 Cerca qui...", "🔍 Search here...");
+        public string NewFolderBtn => GetString("📁 Nuova cartella", "📁 New Folder");
+        public string ImportSoundsBtn => GetString("⬆️ Importa suoni", "⬆️ Import Sounds");
+        public string AllSoundsBtn => GetString("🗂️ Tutti i suoni", "🗂️ All Sounds");
+        public string FavoritesBtn => GetString("⭐ Preferiti", "⭐ Favorites");
+        public string DoubleClickRenameToolTip => GetString("Doppio click per rinominare", "Double click to rename");
+        public string RenameMenu => GetString("✏️ Rinomina", "✏️ Rename");
+        public string PlaySequenceMenu => GetString("▶ Riproduci in sequenza", "▶ Play in sequence");
+        public string DeleteFolderMenu => GetString("🗑️ Elimina cartella", "🗑️ Delete Folder");
+        public string PlayAllSequenceToolTip => GetString("Riproduci tutti in sequenza", "Play all in sequence");
+        public string StopSequenceBtn => GetString("⏹ Ferma sequenza", "⏹ Stop sequence");
+        public string ClearBtn => GetString("Cancella", "Clear");
+        public string NoSoundsYetTitle => GetString("Non c'è ancora nessun suono", "There are no sounds yet");
+        public string NoSoundsYetDesc => GetString("Questa cartella è vuota. Trascina i tuoi file audio (.mp3, .wav) direttamente qui per aggiungerli, oppure usa il menu strumenti in alto per cercarli e scaricarli da internet!", "This folder is empty. Drag your audio files (.mp3, .wav) directly here to add them, or use the tools menu at the top to search and download them from the internet!");
+        public string AddFirstSoundBtn => GetString("➕  Aggiungi il tuo primo suono", "➕  Add your first sound");
+        public string SimpleAudioPct => GetString("🎛 Audio semplice (%)", "🎛 Simple audio (%)");
+        public string ToolsMenuHeader => GetString("MENU STRUMENTI", "TOOLS MENU");
+        public string SearchOnlineTitle => GetString("Cerca Online", "Search Online");
+        public string SearchOnlineDesc => GetString("Scarica da MyInstants", "Download from MyInstants");
+        public string TtsTitleShort => GetString("🗣️ TTS (Voce)", "🗣️ TTS (Voice)");
+        public string TtsDescShort => GetString("Sintesi vocale da testo", "Text-to-speech synthesis");
+        public string StatsHeader => GetString("📊 STATISTICHE", "📊 STATISTICS");
+        public string SavedSoundsLabel => GetString("Suoni salvati:", "Saved sounds:");
+        public string CreatedFoldersLabel => GetString("Cartelle create:", "Created folders:");
+
+        public string OutputDeviceFriends => GetString("📁  Dispositivo output (Amici / Discord)", "📁  Output device (Friends / Discord)");
+        public string OutputDeviceMe => GetString("🎧  Output (Tue cuffie / Speaker)", "🎧  Output (Your headphones / Speaker)");
+        public string NormalizeAudioVolume => GetString("Normalizza volume audio delle clip (evita suoni troppo alti o bassi)", "Normalize audio volume of clips (avoids sound too loud or quiet)");
+        public string NormalizationTargetVolume => GetString("Volume target normalizzazione:", "Normalization target volume:");
+        public string GlobalStopHotkey => GetString("Scorciatoia Globale per Fermare i Suoni:", "Global Shortcut to Stop Sounds:");
+        public string GlobalPauseHotkey => GetString("Scorciatoia Globale per Pausa Suoni:", "Global Shortcut to Pause Sounds:");
+        public string AssignPauseMenu => GetString("⏸ Assegna Pausa", "⏸ Assign Pause");
+        public string SettingsAutoSaved => GetString("Le impostazioni vengono salvate automaticamente.", "Settings are saved automatically.");
+        public string OpenDataFolder => GetString("📁 Apri Cartella Dati e Impostazioni", "📁 Open Data and Settings Folder");
+        public string VersionInfo => GetString("Versione 3.0.0 — Nato per ThePixelBoys, libero per tutti", "Version 3.0.0 — Born for ThePixelBoys, free for everyone");
+        public string RepeatInitialSetup => GetString("⚙️ Ripeti Configurazione Iniziale", "⚙️ Repeat Initial Configuration");
+
+        public string OnboardingTitle => GetString("Benvenuto in ThePixelSoundboard", "Welcome to ThePixelSoundboard");
+        public string OnboardingSetupTitle => GetString("ThePixelSoundboard — Setup Iniziale", "ThePixelSoundboard — Initial Setup");
+        public string WelcomeDesc1 => GetString("Grazie per aver scelto ThePixelSoundboard! Abbiamo progettato questa applicazione per rendere la riproduzione di effetti sonori e sintesi vocali in chiamata estremamente semplice e fluida.", "Thank you for choosing ThePixelSoundboard! We designed this application to make playing sound effects and text-to-speech in calls extremely simple and smooth.");
+        public string StartSetupBtn => GetString("Inizia Configurazione  🚀", "Start Setup  🚀");
+        public string SkipSetupBtn => GetString("Salta Configurazione  ✕", "Skip Setup  ✕");
+        public string ConfigAudioChannel => GetString("Configura il tuo Canale Audio", "Configure your Audio Channel");
+        public string ConfigAudioChannelDesc => GetString("Seleziona i tuoi dispositivi audio. Per trasmettere ai tuoi amici, ti consigliamo di usare un cavo virtuale (es. VB-Cable) impostato come output amici, e di usarlo come microfono su Discord.", "Select your audio devices. To broadcast to your friends, we recommend using a virtual cable (e.g. VB-Cable) set as friends output, and using it as a microphone on Discord.");
+        public string OnboardingPersonalListen => GetString("1. Ascolto Personale (Tu)", "1. Personal Listening (You)");
+        public string OnboardingPersonalListenDesc => GetString("Il dispositivo principale da cui ascolti l'audio (le tue cuffie).", "The main device you listen to audio from (your headphones).");
+        public string OnboardingFriendsOutput => GetString("2. Output per Amici (Discord)", "2. Output for Friends (Discord)");
+        public string OnboardingFriendsOutputDesc => GetString("Scegli il cavo virtuale (es. CABLE Input) per trasmettere i suoni ai tuoi amici.", "Choose the virtual cable (e.g. CABLE Input) to broadcast sounds to your friends.");
+        public string OnboardingRealMic => GetString("3. Il Tuo Microfono Reale", "3. Your Real Microphone");
+        public string OnboardingRealMicDesc => GetString("L'app mixerà la tua voce con i suoni del soundboard sul cavo virtuale, così i tuoi amici sentiranno entrambi.", "The app will mix your voice with the soundboard sounds on the virtual cable, so your friends will hear both.");
+        public string OnboardingDiscordHelpTitle => GetString("💡 Configurazione Discord:", "💡 Discord Setup:");
+        public string OnboardingDiscordHelpDesc => GetString("Su Discord, vai in Impostazioni > Voce e Video, ed imposta come dispositivo di ingresso lo stesso cavo virtuale selezionato qui a sinistra (es. CABLE Output).", "On Discord, go to Settings > Voice & Video, and set the input device to the same virtual cable selected on the left (e.g. CABLE Output).");
+        public string HowToUseApp => GetString("Come Usare ThePixelSoundboard", "How to Use ThePixelSoundboard");
+        public string HowToUseAppDesc => GetString("Scopri i comandi rapidi per sfruttare al meglio la tua nuova applicazione.", "Discover the shortcuts to make the most of your new application.");
+        public string TipImportTitle => GetString("Importa i Suoni", "Import Sounds");
+        public string TipHotkeyTitle => GetString("Tasti di Scelta Rapida", "Hotkeys");
+        public string TipSidebarTitle => GetString("Menu Strumenti", "Tools Menu");
+        public string TipSidebarDesc => GetString("Apri la barra laterale per cercare online su MyInstants, registrare audio al volo dal microfono o creare sintesi vocali TTS personalizzate.", "Open the sidebar to search online on MyInstants, record audio on the fly from the microphone, or create custom TTS text-to-speech.");
     }
 }
