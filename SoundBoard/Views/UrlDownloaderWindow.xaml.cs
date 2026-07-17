@@ -211,7 +211,16 @@ namespace SoundBoard.Views
 
                 StatusTextBlock.Text = string.Format(L10n.Instance.DownloadingTitle, videoTitle);
 
-                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, tempYtFilePathWithoutExt, startSpan, endSpan));
+                var (success, errorLog) = await Task.Run(() => DownloadAudio(url, tempYtFilePathWithoutExt, startSpan, endSpan, (pct, status) =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        DownloadProgressBar.IsIndeterminate = false;
+                        DownloadProgressBar.Value = pct;
+                        string baseText = string.Format(L10n.Instance.DownloadingTitle, videoTitle);
+                        StatusTextBlock.Text = $"{baseText} - {pct:F1}% {status}";
+                    });
+                }));
 
                 if (success && File.Exists(tempYtMp3Path))
                 {
@@ -252,6 +261,11 @@ namespace SoundBoard.Views
             UrlTextBox.IsEnabled = !isLoading;
             ProgressPanel.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
             IdleTextBlock.Visibility = isLoading ? Visibility.Collapsed : Visibility.Visible;
+            if (isLoading)
+            {
+                DownloadProgressBar.IsIndeterminate = true;
+                DownloadProgressBar.Value = 0;
+            }
         }
 
         private string GetVideoTitle(string url)
@@ -282,7 +296,7 @@ namespace SoundBoard.Views
             }
         }
 
-        private (bool Success, string ErrorLog) DownloadAudio(string url, string outputTemplate, TimeSpan? start, TimeSpan? end)
+        private (bool Success, string ErrorLog) DownloadAudio(string url, string outputTemplate, TimeSpan? start, TimeSpan? end, Action<double, string>? progressCallback)
         {
             try
             {
@@ -308,10 +322,40 @@ namespace SoundBoard.Views
                 using (var process = Process.Start(startInfo))
                 {
                     if (process == null) return (false, L10n.Instance.UnableToStartYtdlp);
-                    string stdout = process.StandardOutput.ReadToEnd();
+                    
+                    string line;
+                    System.Text.StringBuilder fullOutput = new System.Text.StringBuilder();
+                    while ((line = process.StandardOutput.ReadLine()) != null)
+                    {
+                        fullOutput.AppendLine(line);
+                        
+                        // Parse progress
+                        // Example: [download]   1.9% of ~  97.64MiB at  202.09KiB/s ETA 10:34
+                        if (line.Contains("[download]") && progressCallback != null)
+                        {
+                            var matchPercent = Regex.Match(line, @"(\d+(?:\.\d+)?)%");
+                            var matchSpeed = Regex.Match(line, @"at\s+(\d+(?:\.\d+)?\s*\w+/s)");
+                            var matchEta = Regex.Match(line, @"ETA\s+(\d{2}:\d{2}(?::\d{2})?)");
+                            
+                            if (matchPercent.Success)
+                            {
+                                double pct = double.Parse(matchPercent.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+                                string speed = matchSpeed.Success ? matchSpeed.Groups[1].Value : "";
+                                string eta = matchEta.Success ? matchEta.Groups[1].Value : "";
+                                string status = "";
+                                if (!string.IsNullOrEmpty(speed) && !string.IsNullOrEmpty(eta))
+                                    status = $"({speed} - ETA {eta})";
+                                else if (!string.IsNullOrEmpty(speed))
+                                    status = $"({speed})";
+                                
+                                progressCallback(pct, status);
+                            }
+                        }
+                    }
+
                     string stderr = process.StandardError.ReadToEnd();
                     process.WaitForExit();
-                    return (process.ExitCode == 0, string.IsNullOrEmpty(stderr) ? stdout : stderr);
+                    return (process.ExitCode == 0, process.ExitCode == 0 ? fullOutput.ToString() : stderr);
                 }
             }
             catch (Exception ex)
