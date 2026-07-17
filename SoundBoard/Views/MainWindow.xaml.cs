@@ -322,6 +322,13 @@ namespace SoundBoard.Views
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z)
+            {
+                _viewModel.UndoDelete();
+                e.Handled = true;
+                return;
+            }
+
             char c = '\0';
             if (e.Key >= Key.A && e.Key <= Key.Z)
             {

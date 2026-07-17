@@ -60,9 +60,6 @@
                         <TextBlock Text="🎵" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="ThePixelSoundboard — Setup Iniziale" FontWeight="Bold" Foreground="#3498DB" FontSize="12" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" 
-                            Background="Transparent" BorderThickness="0" Foreground="#F1F2F6" FontSize="16" FontWeight="Bold"
-                            Padding="8,4" Click="SkipButton_Click" Cursor="Hand" ToolTip="Chiudi e Salta"/>
                 </Grid>
             </Border>
 

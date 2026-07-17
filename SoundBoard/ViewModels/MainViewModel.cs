@@ -51,6 +51,8 @@ namespace SoundBoard.ViewModels
             set => SetField(ref _isSequencePlaying, value);
         }
         private System.Threading.CancellationTokenSource? _sequenceCts;
+        private Models.SoundButtonModel? _lastDeletedModel;
+        private int _lastDeletedIndex;
 
         private static readonly string[] SupportedExtensions = { ".mp3", ".wav", ".ogg" };
 
@@ -261,9 +263,45 @@ namespace SoundBoard.ViewModels
         {
             Stop(vm);
             _hotkeyManager.Unregister(vm.Id);
+
+            // Salviamo le info per l'annullamento (Ctrl+Z)
+            var model = _settings.Buttons.FirstOrDefault(b => b.Id == vm.Id);
+            if (model != null)
+            {
+                _lastDeletedModel = model;
+                _lastDeletedIndex = AllButtons.IndexOf(vm);
+            }
+
             AllButtons.Remove(vm);
             FilteredButtons.Remove(vm);
             _settings.Buttons.RemoveAll(b => b.Id == vm.Id);
+            SaveState();
+        }
+
+        public void UndoDelete()
+        {
+            if (_lastDeletedModel == null) return;
+
+            var model = _lastDeletedModel;
+            _lastDeletedModel = null; // Evita ripristini multipli accidentali
+
+            var vm = new SoundButtonViewModel(model);
+            HookButtonEvents(vm);
+
+            // Inseriamo all'indice originale o alla fine
+            if (_lastDeletedIndex >= 0 && _lastDeletedIndex <= AllButtons.Count)
+            {
+                AllButtons.Insert(_lastDeletedIndex, vm);
+                _settings.Buttons.Insert(_lastDeletedIndex, model);
+            }
+            else
+            {
+                AllButtons.Add(vm);
+                _settings.Buttons.Add(model);
+            }
+
+            if (FilterPredicate(vm)) FilteredButtons.Add(vm);
+            RegisterHotkeyIfPresent(vm);
             SaveState();
         }
 
