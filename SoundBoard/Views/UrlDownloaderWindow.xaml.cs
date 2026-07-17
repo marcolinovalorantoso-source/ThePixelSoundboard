@@ -312,7 +312,7 @@ namespace SoundBoard.Views
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "yt-dlp",
-                    Arguments = $"--impersonate chrome{downloadSectionsArg} --extract-audio --audio-format mp3 --audio-quality 0 -o \"{outputTemplate}.%(ext)s\" \"{url}\"",
+                    Arguments = $"--impersonate chrome --concurrent-fragments 5{downloadSectionsArg} --extract-audio --audio-format mp3 --audio-quality 0 -o \"{outputTemplate}.%(ext)s\" \"{url}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
