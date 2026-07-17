@@ -660,7 +660,7 @@
                 </ScrollViewer>
 
                 <!-- Footer -->
-                <TextBlock Grid.Row="2" Text="ThePixelSoundboard v2.5" FontSize="10" Foreground="#4A5260" HorizontalAlignment="Center" Margin="0,16"/>
+                <TextBlock Grid.Row="2" Text="ThePixelSoundboard v3.0" FontSize="10" Foreground="#4A5260" HorizontalAlignment="Center" Margin="0,16"/>
             </Grid>
         </Border>
     </Grid>

@@ -7,7 +7,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-blue?logo=windows)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-purple?logo=dotnet)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.5.0-orange)
+![Version](https://img.shields.io/badge/Version-3.0.0-orange)
 
 </div>
 
@@ -47,7 +47,7 @@ ThePixelSoundboard funziona misando l'audio della soundboard e la tua voce in un
 
 ## 📥 Installazione e Configurazione
 
-1. Scarica `ThePixelSoundboard_v2.5.0_Setup.exe` dalla sezione [**Releases**](../../releases).
+1. Scarica `ThePixelSoundboard_v3.0.0_Setup.exe` dalla sezione [**Releases**](../../releases).
 2. Esegui l'installazione guidata sul tuo PC.
 3. Al primo avvio, l'**Onboarding Setup Wizard** ti aiuterà a configurare in pochi secondi:
    - Il tuo dispositivo di ascolto principale (le tue cuffie).

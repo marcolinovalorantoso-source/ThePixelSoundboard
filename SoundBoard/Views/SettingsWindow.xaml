@@ -169,7 +169,7 @@
         <Border Background="#2A2E3A" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="ThePixelSoundboard" FontSize="14" FontWeight="Bold" Foreground="#F1F2F6"/>
-                <TextBlock Text="Versione 2.5.0 — per ThePixelBoys" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
+                <TextBlock Text="Versione 3.0.0 — per ThePixelBoys" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 

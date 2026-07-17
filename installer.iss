@@ -1,11 +1,11 @@
 [Setup]
 AppName=ThePixelSoundboard
-AppVersion=2.5.0
+AppVersion=3.0.0
 AppPublisher=Marco Venditti (ThePixelBoys)
 DefaultDirName={autopf}\ThePixelSoundboard
 DefaultGroupName=ThePixelSoundboard
 OutputDir=C:\Users\marco\Desktop
-OutputBaseFilename=ThePixelSoundboard_v2.5.0_Setup
+OutputBaseFilename=ThePixelSoundboard_v3.0.0_Setup
 Compression=lzma
 SolidCompression=yes
 SetupIconFile=SoundBoard\app_icon.ico
