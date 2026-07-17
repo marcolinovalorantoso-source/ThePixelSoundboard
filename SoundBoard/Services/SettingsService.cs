@@ -25,9 +25,10 @@ namespace SoundBoard.Services
         public AppSettings Load()
         {
             AppSettings settings;
+            bool isNewInstall = !File.Exists(SettingsFile);
             try
             {
-                if (File.Exists(SettingsFile))
+                if (!isNewInstall)
                 {
                     var json = File.ReadAllText(SettingsFile);
                     settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
@@ -41,6 +42,14 @@ namespace SoundBoard.Services
             {
                 // File corrotto o illeggibile: si riparte con impostazioni pulite
                 settings = new AppSettings();
+                isNewInstall = true;
+            }
+
+            // Su nuova installazione, rileva la lingua del sistema operativo
+            if (isNewInstall)
+            {
+                var systemLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                settings.Language = systemLang.Equals("it", System.StringComparison.OrdinalIgnoreCase) ? "it" : "en";
             }
 
             // Valida i device ID: se puntano a un indice fuori range, azzera per evitare
