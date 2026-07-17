@@ -364,6 +364,17 @@ namespace SoundBoard.Services
         public string SavedSoundsLabel => GetString("Suoni salvati:", "Saved sounds:");
         public string CreatedFoldersLabel => GetString("Cartelle create:", "Created folders:");
 
+        // Tools menu aliases
+        public string RecordAudioTitle => GetString("Registra Audio", "Record Audio");
+        public string RecordAudioDesc => GetString("Registra da microfono", "Record from microphone");
+        public string DownloadFromUrlTitle => GetString("Scarica da URL", "Download from URL");
+        public string DownloadFromUrlDesc => GetString("YouTube, TikTok o altri link", "YouTube, TikTok or other links");
+        public string OpenFolderTitle => GetString("Apri Cartella", "Open Folder");
+        public string OpenFolderDesc => GetString("Gestisci i file audio dell'app", "Manage app audio files");
+        public string SettingsDescShort => GetString("Configura preferenze e audio", "Configure preferences and audio");
+        public string ClearSoundboardTitle => GetString("Svuota Soundboard", "Clear Soundboard");
+        public string ClearSoundboardDesc => GetString("Rimuovi tutti i suoni caricati", "Remove all loaded sounds");
+
         public string OutputDeviceFriends => GetString("📁  Dispositivo output (Amici / Discord)", "📁  Output device (Friends / Discord)");
         public string OutputDeviceMe => GetString("🎧  Output (Tue cuffie / Speaker)", "🎧  Output (Your headphones / Speaker)");
         public string NormalizeAudioVolume => GetString("Normalizza volume audio delle clip (evita suoni troppo alti o bassi)", "Normalize audio volume of clips (avoids sound too loud or quiet)");
