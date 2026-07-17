@@ -8,15 +8,16 @@ using System.Windows;
 using System.Net.Http;
 using System.Text.Json;
 using SoundBoard.ViewModels;
+using SoundBoard.Services;
 
 namespace SoundBoard.Views
 {
     public partial class UrlDownloaderWindow : Window
     {
         private readonly MainViewModel _viewModel;
-        private const string PlaceholderText = "Incolla il link del video qui (es: https://www.youtube.com/watch?v=...)";
-        private const string StartPlaceholder = "es. 00:10 o 10";
-        private const string EndPlaceholder = "es. 00:15 o 15";
+        private string PlaceholderText => L10n.Instance.UrlPlaceholder;
+        private string StartPlaceholder => L10n.Instance.StartCutPlaceholder;
+        private string EndPlaceholder => L10n.Instance.EndCutPlaceholder;
 
         public UrlDownloaderWindow(MainViewModel viewModel)
         {
@@ -33,6 +34,19 @@ namespace SoundBoard.Views
 
             EndTextBox.Text = EndPlaceholder;
             EndTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+
+            L10n.Instance.PropertyChanged += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(L10n.CurrentLanguage))
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (UrlTextBox.Foreground == System.Windows.Media.Brushes.Gray) UrlTextBox.Text = PlaceholderText;
+                        if (StartTextBox.Foreground == System.Windows.Media.Brushes.Gray) StartTextBox.Text = StartPlaceholder;
+                        if (EndTextBox.Foreground == System.Windows.Media.Brushes.Gray) EndTextBox.Text = EndPlaceholder;
+                    });
+                }
+            };
         }
 
         private void UrlTextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -99,7 +113,7 @@ namespace SoundBoard.Views
             string url = UrlTextBox.Text.Trim();
             if (string.IsNullOrEmpty(url) || url == PlaceholderText)
             {
-                MessageBox.Show("Inserisci un link valido prima di procedere.", "URL Vuoto", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.EnterValidLink, L10n.Instance.EmptyUrl, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -113,19 +127,19 @@ namespace SoundBoard.Views
             // Validation of trim values
             if (StartTextBox.Text != StartPlaceholder && !string.IsNullOrWhiteSpace(StartTextBox.Text) && startSpan == null)
             {
-                MessageBox.Show("Il tempo di inizio inserito non è valido. Usa il formato secondi (es. 10) o minuti:secondi (es. 01:20).", "Errore Formato Tempo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.InvalidStartTime, L10n.Instance.TimeFormatError, MessageBoxButton.OK, MessageBoxImage.Warning);
                 SetLoadingState(false);
                 return;
             }
             if (EndTextBox.Text != EndPlaceholder && !string.IsNullOrWhiteSpace(EndTextBox.Text) && endSpan == null)
             {
-                MessageBox.Show("Il tempo di fine inserito non è valido. Usa il formato secondi (es. 15) o minuti:secondi (es. 01:25).", "Errore Formato Tempo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.InvalidEndTime, L10n.Instance.TimeFormatError, MessageBoxButton.OK, MessageBoxImage.Warning);
                 SetLoadingState(false);
                 return;
             }
             if (startSpan != null && endSpan != null && startSpan >= endSpan)
             {
-                MessageBox.Show("Il tempo di inizio deve essere inferiore al tempo di fine.", "Errore Selezione Tempo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.StartTimeLessThanEnd, L10n.Instance.TimeSelectionError, MessageBoxButton.OK, MessageBoxImage.Warning);
                 SetLoadingState(false);
                 return;
             }
@@ -135,7 +149,7 @@ namespace SoundBoard.Views
                 // Se è un link TikTok, proviamo prima con TikWM API (molto più robusto per aggirare i login di TikTok)
                 if (url.Contains("tiktok.com"))
                 {
-                    StatusTextBlock.Text = "Connessione a TikTok (TikWM)...";
+                    StatusTextBlock.Text = L10n.Instance.ConnectingToTiktok;
                     string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
                     string destFolder = Path.Combine(appDataFolder, "Sounds");
                     Directory.CreateDirectory(destFolder);
@@ -152,14 +166,14 @@ namespace SoundBoard.Views
                         // tiktokErrorOrPath contains the downloaded full file
                         if (startSpan != null || endSpan != null)
                         {
-                            StatusTextBlock.Text = "Taglio audio in corso...";
+                            StatusTextBlock.Text = L10n.Instance.TrimmingAudio;
                             bool cropSuccess = CropAudioFfmpeg(tiktokErrorOrPath, finalTiktokMp3Path, startSpan, endSpan);
                             try { File.Delete(tiktokErrorOrPath); } catch { }
 
                             if (cropSuccess && File.Exists(finalTiktokMp3Path))
                             {
                                 _viewModel.ImportFile(finalTiktokMp3Path);
-                                MessageBox.Show("Suono scaricato da TikTok, tagliato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                                MessageBox.Show(L10n.Instance.TiktokDownloadedTrimmedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
                                 Close();
                                 return;
                             }
@@ -167,16 +181,16 @@ namespace SoundBoard.Views
                         else
                         {
                             _viewModel.ImportFile(tiktokErrorOrPath);
-                            MessageBox.Show("Suono scaricato da TikTok ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show(L10n.Instance.TiktokDownloadedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
                             Close();
                             return;
                         }
                     }
                     
-                    StatusTextBlock.Text = "TikWM non riuscito. Provo a ripiegare su yt-dlp...";
+                    StatusTextBlock.Text = L10n.Instance.TikwmFailedFallback;
                 }
 
-                StatusTextBlock.Text = "Verifica link e caricamento informazioni...";
+                StatusTextBlock.Text = L10n.Instance.CheckingLinkInfo;
                 string videoTitle = await Task.Run(() => GetVideoTitle(url));
 
                 if (string.IsNullOrEmpty(videoTitle))
@@ -195,7 +209,7 @@ namespace SoundBoard.Views
                 string tempYtFilePathWithoutExt = destFilePathWithoutExt + "_temp";
                 string tempYtMp3Path = tempYtFilePathWithoutExt + ".mp3";
 
-                StatusTextBlock.Text = $"Download in corso: {videoTitle}...";
+                StatusTextBlock.Text = string.Format(L10n.Instance.DownloadingTitle, videoTitle);
 
                 var (success, errorLog) = await Task.Run(() => DownloadAudio(url, tempYtFilePathWithoutExt));
 
@@ -203,13 +217,13 @@ namespace SoundBoard.Views
                 {
                     if (startSpan != null || endSpan != null)
                     {
-                        StatusTextBlock.Text = "Taglio audio in corso...";
+                        StatusTextBlock.Text = L10n.Instance.TrimmingAudio;
                         bool cropSuccess = CropAudioFfmpeg(tempYtMp3Path, finalMp3Path, startSpan, endSpan);
                         if (cropSuccess && File.Exists(finalMp3Path))
                         {
                             try { File.Delete(tempYtMp3Path); } catch { }
                             _viewModel.ImportFile(finalMp3Path);
-                            MessageBox.Show("Suono scaricato, tagliato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show(L10n.Instance.SoundDownloadedTrimmedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
                             Close();
                         }
                         else
@@ -218,7 +232,7 @@ namespace SoundBoard.Views
                             if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
                             File.Move(tempYtMp3Path, finalMp3Path, true);
                             _viewModel.ImportFile(finalMp3Path);
-                            MessageBox.Show("Download completato ma il taglio audio è fallito. Il file è stato importato intero.", "Taglio Fallito", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show(L10n.Instance.TrimFailedFallback, L10n.Instance.TrimFailed, MessageBoxButton.OK, MessageBoxImage.Warning);
                             Close();
                         }
                     }
@@ -227,19 +241,19 @@ namespace SoundBoard.Views
                         if (File.Exists(finalMp3Path)) { try { File.Delete(finalMp3Path); } catch { } }
                         File.Move(tempYtMp3Path, finalMp3Path, true);
                         _viewModel.ImportFile(finalMp3Path);
-                        MessageBox.Show("Suono scaricato ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(L10n.Instance.SoundDownloadedSuccess, L10n.Instance.Completed, MessageBoxButton.OK, MessageBoxImage.Information);
                         Close();
                     }
                 }
                 else
                 {
-                    MessageBox.Show($"Impossibile scaricare l'audio. Assicurati che il link sia valido.\n\nDettagli errore:\n{errorLog}", 
-                        "Errore di Download", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format(L10n.Instance.DownloadFailedDetails, errorLog), 
+                        L10n.Instance.DownloadError, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Si è verificato un errore:\n{ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.GeneralError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -300,7 +314,7 @@ namespace SoundBoard.Views
 
                 using (var process = Process.Start(startInfo))
                 {
-                    if (process == null) return (false, "Impossibile avviare il processo yt-dlp.");
+                    if (process == null) return (false, L10n.Instance.UnableToStartYtdlp);
                     string stdout = process.StandardOutput.ReadToEnd();
                     string stderr = process.StandardError.ReadToEnd();
                     process.WaitForExit();
@@ -327,7 +341,7 @@ namespace SoundBoard.Views
                     var response = await client.PostAsync("https://www.tikwm.com/api/", content);
                     if (!response.IsSuccessStatusCode)
                     {
-                        return (false, string.Empty, $"Errore HTTP: {response.StatusCode}");
+                        return (false, string.Empty, "HTTP Error: " + response.StatusCode);
                     }
 
                     var jsonString = await response.Content.ReadAsStringAsync();
@@ -336,7 +350,7 @@ namespace SoundBoard.Views
                         var root = doc.RootElement;
                         if (!root.TryGetProperty("code", out var codeProp))
                         {
-                            return (false, string.Empty, "Risposta API non valida.");
+                            return (false, string.Empty, L10n.Instance.InvalidApiResponse);
                         }
 
                         int code = codeProp.GetInt32();
@@ -371,7 +385,7 @@ namespace SoundBoard.Views
 
                         if (string.IsNullOrEmpty(downloadUrl))
                         {
-                            return (false, string.Empty, "Link audio non trovato nella risposta TikTok.");
+                            return (false, string.Empty, L10n.Instance.AudioLinkNotFoundTiktok);
                         }
 
                         // Scarica e salva

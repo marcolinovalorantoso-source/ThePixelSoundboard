@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:SoundBoard.ViewModels"
         xmlns:conv="clr-namespace:SoundBoard.Converters"
-        Title="ThePixelSoundboard"
+        xmlns:services="clr-namespace:SoundBoard.Services"
+        Title="{Binding AppTitle, Source={x:Static services:L10n.Instance}}"
         Icon="/app_icon.ico"
         MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterScreen"
@@ -67,13 +68,13 @@
                 </Border.Style>
                 <Border.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="✏️ Modifica" Click="EditMenuItem_Click"/>
-                        <MenuItem Header="✂️ Taglia Audio" Click="TrimMenuItem_Click"/>
-                        <MenuItem Header="📁 Apri percorso file" Click="OpenFileLocationMenuItem_Click"/>
-                        <MenuItem Header="⌨️ Assegna hotkey" Click="HotkeyMenuItem_Click"/>
-                        <MenuItem Header="⭐ Preferito" Click="FavoriteMenuItem_Click"/>
+                        <MenuItem Header="{Binding EditMenu, Source={x:Static services:L10n.Instance}}" Click="EditMenuItem_Click"/>
+                        <MenuItem Header="{Binding TrimSound, Source={x:Static services:L10n.Instance}}" Click="TrimMenuItem_Click"/>
+                        <MenuItem Header="{Binding OpenFileLocation, Source={x:Static services:L10n.Instance}}" Click="OpenFileLocationMenuItem_Click"/>
+                        <MenuItem Header="{Binding AssignHotkeyMenu, Source={x:Static services:L10n.Instance}}" Click="HotkeyMenuItem_Click"/>
+                        <MenuItem Header="{Binding Favorite, Source={x:Static services:L10n.Instance}}" Click="FavoriteMenuItem_Click"/>
                         <Separator/>
-                        <MenuItem Header="🗑️ Elimina" Click="DeleteMenuItem_Click"/>
+                        <MenuItem Header="{Binding DeleteSound, Source={x:Static services:L10n.Instance}}" Click="DeleteMenuItem_Click"/>
                     </ContextMenu>
                 </Border.ContextMenu>
                 <Grid Margin="8">
@@ -88,7 +89,7 @@
                                MaxHeight="34" TextTrimming="CharacterEllipsis"/>
                     <Button Grid.Row="0" Content="{Binding FavoriteIcon}" VerticalAlignment="Top" HorizontalAlignment="Right"
                             Width="22" Height="22" Padding="0" FontSize="13" Background="Transparent" BorderThickness="0"
-                            Click="FavoriteButton_Click" ToolTip="Preferito"/>
+                            Click="FavoriteButton_Click" ToolTip="{Binding Favorite, Source={x:Static services:L10n.Instance}}"/>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -214,14 +215,14 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" Click="HamburgerButton_Click" Background="{StaticResource AccentBrush}" Foreground="#FFFFFF" 
-                        BorderThickness="0" Cursor="Hand" ToolTip="Apri Menu Strumenti" Height="36" HorizontalAlignment="Left"
+                        BorderThickness="0" Cursor="Hand" ToolTip="{Binding OpenToolsMenu, Source={x:Static services:L10n.Instance}}" Height="36" HorizontalAlignment="Left"
                         OverridesDefaultStyle="True" VerticalAlignment="Center">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="18" Padding="14,6">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="✨" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Menu Strumenti" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding OpenToolsMenu, Source={x:Static services:L10n.Instance}}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -235,7 +236,7 @@
 
                 <TextBox Grid.Column="1" Width="320" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0,0,0"
                           Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                          Tag="🔍 Cerca qui...">
+                          Tag="{Binding SearchPlaceholder, Source={x:Static services:L10n.Instance}}">
                     <TextBox.Style>
                         <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
                             <Style.Triggers>
@@ -247,10 +248,10 @@
                     </TextBox.Style>
                 </TextBox>
 
-                <Button Grid.Column="2" Content="📁 Nuova cartella" Margin="8,0" Click="AddFolderButton_Click"/>
-                <Button Grid.Column="3" Content="⬆️ Importa suoni" Margin="8,0" Click="ImportButton_Click"/>
+                <Button Grid.Column="2" Content="{Binding NewFolderBtn, Source={x:Static services:L10n.Instance}}" Margin="8,0" Click="AddFolderButton_Click"/>
+                <Button Grid.Column="3" Content="{Binding ImportSoundsBtn, Source={x:Static services:L10n.Instance}}" Margin="8,0" Click="ImportButton_Click"/>
                 
-                <Button Grid.Column="4" Width="40" Height="40" Padding="8" Click="SettingsButton_Click" ToolTip="Impostazioni"
+                <Button Grid.Column="4" Width="40" Height="40" Padding="8" Click="SettingsButton_Click" ToolTip="{Binding SettingsTitle, Source={x:Static services:L10n.Instance}}"
                         Background="Transparent" BorderThickness="0" OverridesDefaultStyle="True">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
@@ -285,27 +286,27 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Sidebar cartelle -->
+                    <!-- Sidebar cartelle -->
             <Border Grid.Column="0" Background="{StaticResource BgPanelBrush}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="8">
-                    <TextBlock Text="CARTELLE" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                    <TextBlock Text="{Binding FoldersHeader, Source={x:Static services:L10n.Instance}}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
                                Margin="8,10,8,6" FontWeight="Bold"/>
-                    <Button Content="🗂️ Tutti i suoni" HorizontalContentAlignment="Left"
+                    <Button Content="{Binding AllSoundsBtn, Source={x:Static services:L10n.Instance}}" HorizontalContentAlignment="Left"
                             Background="Transparent" Click="SelectFolder_All"/>
-                    <Button Content="⭐ Preferiti" HorizontalContentAlignment="Left"
+                    <Button Content="{Binding FavoritesBtn, Source={x:Static services:L10n.Instance}}" HorizontalContentAlignment="Left"
                             Background="Transparent" Margin="0,2,0,0" Click="ToggleFavoritesFilter_Click"/>
                     <ListBox x:Name="FoldersListBox" ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder}"
                              Margin="0,4,0,0">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid ToolTip="Doppio click per rinominare" MouseLeftButtonDown="FolderItem_MouseLeftDown">
+                                <Grid ToolTip="{Binding DoubleClickRenameToolTip, Source={x:Static services:L10n.Instance}}" MouseLeftButtonDown="FolderItem_MouseLeftDown">
                                     <Grid.ContextMenu>
                                         <ContextMenu>
-                                            <MenuItem Header="✏️ Rinomina" Click="FolderRenameMenuItem_Click"/>
-                                            <MenuItem Header="▶ Riproduci in sequenza" Click="FolderPlayMenuItem_Click"/>
+                                            <MenuItem Header="{Binding RenameMenu, Source={x:Static services:L10n.Instance}}" Click="FolderRenameMenuItem_Click"/>
+                                            <MenuItem Header="{Binding PlaySequenceMenu, Source={x:Static services:L10n.Instance}}" Click="FolderPlayMenuItem_Click"/>
                                             <Separator/>
-                                            <MenuItem Header="🗑️ Elimina" Click="FolderDeleteMenuItem_Click"/>
+                                            <MenuItem Header="{Binding DeleteFolderMenu, Source={x:Static services:L10n.Instance}}" Click="FolderDeleteMenuItem_Click"/>
                                         </ContextMenu>
                                     </Grid.ContextMenu>
                                     <Grid.ColumnDefinitions>
@@ -316,17 +317,17 @@
                                     <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center"/>
                                     <Button Grid.Column="1" Content="▶" Width="20" Height="20" FontSize="10"
                                             Background="Transparent" Click="PlayFolderButton_Click"
-                                            ToolTip="Riproduci tutti in sequenza"/>
+                                            ToolTip="{Binding PlayAllSequenceToolTip, Source={x:Static services:L10n.Instance}}"/>
                                     <Button Grid.Column="2" Content="✕" Width="20" Height="20" FontSize="10"
                                             Background="Transparent" Click="DeleteFolderButton_Click"
-                                            ToolTip="Elimina cartella"/>
+                                            ToolTip="{Binding DeleteFolderMenu, Source={x:Static services:L10n.Instance}}"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
 
                     <!-- Riproduzione sequenziale in corso -->
-                    <Button Content="⏹ Ferma sequenza" Margin="0,8,0,0" Background="{StaticResource DangerBrush}"
+                    <Button Content="{Binding StopSequenceBtn, Source={x:Static services:L10n.Instance}}" Margin="0,8,0,0" Background="{StaticResource DangerBrush}"
                             Command="{Binding StopSequenceCommand}"
                             Visibility="{Binding IsSequencePlaying, Converter={StaticResource BoolToVis}}"/>
 
@@ -340,14 +341,14 @@
                         
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="🕒" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                            <TextBlock Text="CRONOLOGIA" FontSize="10.5" FontWeight="Bold" 
+                            <TextBlock Text="{Binding HistoryHeader, Source={x:Static services:L10n.Instance}}" FontSize="10.5" FontWeight="Bold" 
                                        Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
                         
                         <!-- Bottone Cancella (mostrato solo se la cronologia ha elementi) -->
                         <Button Grid.Column="1" Click="ClearHistory_Click" Background="Transparent" Foreground="#5F677A"
                                 BorderThickness="0" Cursor="Hand" Padding="4,2" FontSize="9" FontWeight="SemiBold"
-                                ToolTip="Pulisci cronologia" VerticalAlignment="Center" OverridesDefaultStyle="True">
+                                ToolTip="{Binding ClearHistoryToolTip, Source={x:Static services:L10n.Instance}}" VerticalAlignment="Center" OverridesDefaultStyle="True">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Visibility" Value="Visible"/>
@@ -360,7 +361,7 @@
                             </Button.Style>
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <TextBlock Text="Cancella" x:Name="btnTxt"/>
+                                    <TextBlock Text="{Binding ClearBtn, Source={x:Static services:L10n.Instance}}" x:Name="btnTxt"/>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="btnTxt" Property="Foreground" Value="{StaticResource DangerBrush}"/>
@@ -385,7 +386,7 @@
                         </Border.Style>
                         <StackPanel Orientation="Horizontal" Opacity="0.45">
                             <TextBlock Text="💤" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Nessun suono recente" FontSize="10.5" FontStyle="Italic" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding NoRecentSounds, Source={x:Static services:L10n.Instance}}" FontSize="10.5" FontStyle="Italic" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
                         </StackPanel>
                     </Border>
 
@@ -426,7 +427,7 @@
                                         
                                         <!-- Bottone elimina singolo elemento -->
                                         <Button Grid.Column="2" Click="RemoveFromHistory_Click" Background="Transparent" BorderThickness="0"
-                                                Cursor="Hand" ToolTip="Rimuovi" OverridesDefaultStyle="True" VerticalAlignment="Center" Margin="4,0,0,0">
+                                                Cursor="Hand" ToolTip="{Binding RemoveBtn, Source={x:Static services:L10n.Instance}}" OverridesDefaultStyle="True" VerticalAlignment="Center" Margin="4,0,0,0">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
                                                     <TextBlock Text="✕" FontSize="9.5" x:Name="delTxt" Foreground="#4A5260"/>
@@ -482,12 +483,12 @@
                             <TextBlock Text="🎵" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <!-- Titolo -->
-                        <TextBlock Text="Non c'è ancora nessun suono" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <TextBlock Text="{Binding NoSoundsYetTitle, Source={x:Static services:L10n.Instance}}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                         <!-- Descrizione -->
-                        <TextBlock Text="Questa cartella è vuota. Trascina i tuoi file audio (.mp3, .wav) direttamente qui per aggiungerli, oppure usa il menu strumenti in alto per cercarli e scaricarli da internet!" 
+                        <TextBlock Text="{Binding NoSoundsYetDesc, Source={x:Static services:L10n.Instance}}" 
                                    TextWrapping="Wrap" TextAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" LineHeight="18" Margin="0,0,0,24"/>
                         <!-- Pulsante di importazione rapida -->
-                        <Button Content="➕  Aggiungi il tuo primo suono" Click="ImportButton_Click" HorizontalAlignment="Center" Padding="18,10" Style="{StaticResource FlatButton}"/>
+                        <Button Content="{Binding AddFirstSoundBtn, Source={x:Static services:L10n.Instance}}" Click="ImportButton_Click" HorizontalAlignment="Center" Padding="18,10" Style="{StaticResource FlatButton}"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -536,10 +537,10 @@
                         <Button FontSize="11" Padding="6,4" Click="ToggleAdvancedAudio_Click">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource FlatButton}">
-                                    <Setter Property="Content" Value="🎛 Audio avanzato (dB)"/>
+                                    <Setter Property="Content" Value="{Binding AdvancedAudioDb, Source={x:Static services:L10n.Instance}}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ShowDecibels}" Value="True">
-                                            <Setter Property="Content" Value="🎛 Audio semplice (%)"/>
+                                            <Setter Property="Content" Value="{Binding SimpleAudioPct, Source={x:Static services:L10n.Instance}}"/>
                                             <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -569,8 +570,8 @@
                 <!-- Header -->
                 <Border Grid.Row="0" BorderBrush="#1C2230" BorderThickness="0,0,0,1" Padding="16,14">
                     <Grid>
-                        <TextBlock Text="MENU STRUMENTI" FontSize="11" FontWeight="Bold" Foreground="#3498DB" VerticalAlignment="Center"/>
-                        <Button Content="✕" Width="24" Height="24" FontSize="10" Background="Transparent" Foreground="#9AA0AE" HorizontalAlignment="Right" Click="CloseDrawerButton_Click" ToolTip="Chiudi"/>
+                        <TextBlock Text="{Binding ToolsMenuHeader, Source={x:Static services:L10n.Instance}}" FontSize="11" FontWeight="Bold" Foreground="#3498DB" VerticalAlignment="Center"/>
+                        <Button Content="✕" Width="24" Height="24" FontSize="10" Background="Transparent" Foreground="#9AA0AE" HorizontalAlignment="Right" Click="CloseDrawerButton_Click" ToolTip="{Binding Close, Source={x:Static services:L10n.Instance}}"/>
                     </Grid>
                 </Border>
 
@@ -581,8 +582,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🌐" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="Cerca Online" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
-                                    <TextBlock Text="Scarica da MyInstants" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding SearchOnlineTitle, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="{Binding SearchOnlineDesc, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -590,8 +591,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🗣️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="TTS (Voce)" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
-                                    <TextBlock Text="Sintesi vocale da testo" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding TtsTitleShort, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="{Binding TtsDescShort, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -599,8 +600,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🎤" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="Registra Audio" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
-                                    <TextBlock Text="Registra da microfono" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding RecordAudioTitle, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="{Binding RecordAudioDesc, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -608,8 +609,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔗" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="Scarica da URL" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
-                                    <TextBlock Text="YouTube, TikTok o altri link" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding DownloadFromUrlTitle, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="{Binding DownloadFromUrlDesc, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -617,8 +618,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📁" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="Apri Cartella" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
-                                    <TextBlock Text="Gestisci i file audio dell'app" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding OpenFolderTitle, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="{Binding OpenFolderDesc, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -626,8 +627,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚙️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="Impostazioni" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
-                                    <TextBlock Text="Configura preferenze e audio" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding SettingsTitle, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="{Binding SettingsDescShort, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -636,8 +637,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🗑️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <StackPanel>
-                                    <TextBlock Text="Svuota Soundboard" FontWeight="SemiBold" Foreground="#FF6B6B" FontSize="13"/>
-                                    <TextBlock Text="Rimuovi tutti i suoni caricati" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding ClearSoundboardTitle, Source={x:Static services:L10n.Instance}}" FontWeight="SemiBold" Foreground="#FF6B6B" FontSize="13"/>
+                                    <TextBlock Text="{Binding ClearSoundboardDesc, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -645,13 +646,13 @@
                         <!-- Scheda Statistiche -->
                         <Border Background="#161B26" BorderBrush="#252F42" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,24,0,0">
                             <StackPanel>
-                                <TextBlock Text="📊 STATISTICHE" FontSize="9" FontWeight="Bold" Foreground="#3498DB" Margin="0,0,0,8"/>
+                                <TextBlock Text="{Binding StatsHeader, Source={x:Static services:L10n.Instance}}" FontSize="9" FontWeight="Bold" Foreground="#3498DB" Margin="0,0,0,8"/>
                                 <Grid Margin="0,2">
-                                    <TextBlock Text="Suoni salvati:" FontSize="10.5" Foreground="#9AA0AE"/>
+                                    <TextBlock Text="{Binding SavedSoundsLabel, Source={x:Static services:L10n.Instance}}" FontSize="10.5" Foreground="#9AA0AE"/>
                                     <TextBlock Text="{Binding AllButtons.Count}" FontSize="10.5" FontWeight="Bold" Foreground="#F1F2F6" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Grid Margin="0,2">
-                                    <TextBlock Text="Cartelle create:" FontSize="10.5" Foreground="#9AA0AE"/>
+                                    <TextBlock Text="{Binding CreatedFoldersLabel, Source={x:Static services:L10n.Instance}}" FontSize="10.5" Foreground="#9AA0AE"/>
                                     <TextBlock Text="{Binding Folders.Count}" FontSize="10.5" FontWeight="Bold" Foreground="#F1F2F6" HorizontalAlignment="Right"/>
                                 </Grid>
                             </StackPanel>

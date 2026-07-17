@@ -1,7 +1,8 @@
 <Window x:Class="SoundBoard.Views.TtsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="🗣️ Text-To-Speech (Meme Voice)" Width="480" Height="360"
+        xmlns:services="clr-namespace:SoundBoard.Services"
+        Title="{Binding TtsTitle, Source={x:Static services:L10n.Instance}}" Width="480" Height="360"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="#1B1D23" Icon="/settings_icon.ico">
     <Window.Resources>
@@ -98,8 +99,8 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock Text="🗣️ MEME TTS (TEXT-TO-SPEECH)" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-            <TextBlock Text="Scrivi una frase, imposta la velocità e trasmettila ai tuoi amici!" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+            <TextBlock Text="{Binding TtsHeader, Source={x:Static services:L10n.Instance}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding TtsDesc, Source={x:Static services:L10n.Instance}}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
         </StackPanel>
 
         <!-- Text Input -->
@@ -120,13 +121,13 @@
 
                 <!-- Voice Selection -->
                 <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                    <TextBlock Text="Seleziona Voce" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectVoice, Source={x:Static services:L10n.Instance}}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                     <ComboBox x:Name="VoiceComboBox" DisplayMemberPath="DisplayName" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                    <TextBlock Text="Velocità" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}"/>
-                    <TextBlock x:Name="RateValueText" Text="Normale (0)" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,2,0,0"/>
+                    <TextBlock Text="{Binding Speed, Source={x:Static services:L10n.Instance}}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock x:Name="RateValueText" Text="{Binding NormalSpeed, Source={x:Static services:L10n.Instance}}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,2,0,0"/>
                     <Slider x:Name="RateSlider" Minimum="-10" Maximum="10" Value="0" SmallChange="1" LargeChange="2" Margin="0,6,0,0" ValueChanged="RateSlider_ValueChanged"/>
                 </StackPanel>
             </Grid>
@@ -141,10 +142,10 @@
             </Grid.ColumnDefinitions>
 
             <!-- Test/Preview locally (only for Me) -->
-            <Button Grid.Column="0" Content="🗣️ Riproduci" Padding="16,10" Width="130" FontWeight="Bold" Click="Speak_Click"/>
+            <Button Grid.Column="0" Content="{Binding PlayBtn, Source={x:Static services:L10n.Instance}}" Padding="16,10" Width="130" FontWeight="Bold" Click="Speak_Click"/>
             
             <!-- Save to grid -->
-            <Button Grid.Column="2" Content="💾 Salva come tasto" Style="{StaticResource FlatButton}" Padding="16,10" Width="160" Click="SaveButton_Click" Background="{StaticResource AccentBrush}"/>
+            <Button Grid.Column="2" Content="{Binding SaveAsButton, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Padding="16,10" Width="160" Click="SaveButton_Click" Background="{StaticResource AccentBrush}"/>
         </Grid>
     </Grid>
 </Window>

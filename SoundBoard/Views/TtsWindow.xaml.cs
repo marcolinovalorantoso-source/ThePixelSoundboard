@@ -9,25 +9,50 @@ using SoundBoard.ViewModels;
 using Windows.Media.SpeechSynthesis;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using SoundBoard.Services;
 
 namespace SoundBoard.Views
 {
     public class TtsVoiceItem
     {
-        public string DisplayName { get; }
+        private readonly string _name;
         public VoiceInformation? WinRtVoice { get; }
         public string? GoogleLangCode { get; }
         public bool IsGoogle => GoogleLangCode != null;
 
+        public string DisplayName
+        {
+            get
+            {
+                if (IsGoogle)
+                {
+                    var localizedName = GoogleLangCode switch
+                    {
+                        "it" => L10n.Instance.GoogleVoiceIt,
+                        "en" => L10n.Instance.GoogleVoiceEn,
+                        "es" => L10n.Instance.GoogleVoiceEs,
+                        "ja" => L10n.Instance.GoogleVoiceJa,
+                        "fr" => L10n.Instance.GoogleVoiceFr,
+                        _ => _name
+                    };
+                    return localizedName + L10n.Instance.GoogleMemeSuffix;
+                }
+                else
+                {
+                    return _name + L10n.Instance.WindowsVoiceSuffix;
+                }
+            }
+        }
+
         public TtsVoiceItem(VoiceInformation voice)
         {
-            DisplayName = voice.DisplayName + " (Voce Windows)";
+            _name = voice.DisplayName;
             WinRtVoice = voice;
         }
 
         public TtsVoiceItem(string name, string langCode)
         {
-            DisplayName = name + " (Google Meme)";
+            _name = name;
             GoogleLangCode = langCode;
         }
     }
@@ -102,7 +127,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Errore durante l'inizializzazione delle voci TTS: " + ex.Message, "SoundBoard", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.TtsVoicesInitError + ex.Message, L10n.Instance.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -178,7 +203,7 @@ namespace SoundBoard.Views
             var text = TtsTextBox.Text.Trim();
             if (string.IsNullOrEmpty(text) || _placeholderActive)
             {
-                MessageBox.Show("Scrivi del testo prima di riprodurlo!", "SoundBoard", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.TtsWriteTextFirst, L10n.Instance.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -196,7 +221,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Errore TTS: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.TtsError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -205,7 +230,7 @@ namespace SoundBoard.Views
             var text = TtsTextBox.Text.Trim();
             if (string.IsNullOrEmpty(text) || _placeholderActive)
             {
-                MessageBox.Show("Scrivi del testo prima di salvarlo!", "SoundBoard", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.TtsWriteTextFirstSave, L10n.Instance.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -232,14 +257,14 @@ namespace SoundBoard.Views
 
                         // Importa il file generato come un nuovo tasto nella Soundboard
                         _viewModel.ImportFile(destPath);
-                        MessageBox.Show("Tasto TTS creato con successo nella SoundBoard!", "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(L10n.Instance.TtsButtonCreatedSuccess, L10n.Instance.Success, MessageBoxButton.OK, MessageBoxImage.Information);
                         this.Close();
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Errore durante il salvataggio TTS: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.TtsSaveError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -247,9 +272,9 @@ namespace SoundBoard.Views
         {
             if (RateValueText == null) return;
             var val = (int)e.NewValue;
-            if (val == 0) RateValueText.Text = "Normale (0)";
-            else if (val > 0) RateValueText.Text = $"Veloce (+{val})";
-            else RateValueText.Text = $"Lento ({val})";
+            if (val == 0) RateValueText.Text = L10n.Instance.NormalSpeed;
+            else if (val > 0) RateValueText.Text = string.Format(L10n.Instance.FastSpeed, val);
+            else RateValueText.Text = string.Format(L10n.Instance.SlowSpeed, val);
         }
 
         private void TtsTextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -272,7 +297,7 @@ namespace SoundBoard.Views
 
         private void ResetPlaceholder()
         {
-            TtsTextBox.Text = "Scrivi qui!";
+            TtsTextBox.Text = L10n.Instance.TtsPlaceholder;
             TtsTextBox.Foreground = (Brush)FindResource("TextSecondaryBrush");
             _placeholderActive = true;
         }

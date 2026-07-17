@@ -47,7 +47,7 @@ namespace SoundBoard.Views
         {
             if (string.IsNullOrEmpty(_filePath) || !File.Exists(_filePath))
             {
-                MessageBox.Show("File audio non trovato o non valido.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.AudioFileNotFoundOrInvalid, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                 Close();
                 return;
             }
@@ -82,7 +82,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Impossibile leggere il file audio:\n{ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.AudioFileReadError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                 Close();
             }
         }
@@ -238,7 +238,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore riproduzione:\n{ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.PlaybackError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -278,7 +278,7 @@ namespace SoundBoard.Views
 
             if (end - start < 0.1)
             {
-                MessageBox.Show("La selezione deve durare almeno 0.1 secondi.", "Taglia Audio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.SelectionMinDuration, L10n.Instance.TrimAudioTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -292,7 +292,7 @@ namespace SoundBoard.Views
                 var newModel = new Models.SoundButtonModel
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = "(Tagliato) " + _soundVm.Name,
+                    Name = L10n.Instance.TrimmedPrefix + _soundVm.Name,
                     FilePath = tempOut,
                     Color = _soundVm.Color,
                     Volume = _soundVm.Volume
@@ -309,8 +309,8 @@ namespace SoundBoard.Views
                 {
                     try { File.Delete(tempOut); } catch { }
                 }
-                MessageBox.Show($"Impossibile tagliare l'audio. Assicurati che il suono non sia in riproduzione.\nDettagli: {ex.Message}", 
-                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.TrimGenericError + ex.Message, 
+                    L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

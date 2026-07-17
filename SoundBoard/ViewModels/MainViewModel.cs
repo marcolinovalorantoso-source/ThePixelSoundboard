@@ -738,6 +738,18 @@ namespace SoundBoard.ViewModels
             }
         }
 
+        public string Language
+        {
+            get => _settings.Language;
+            set
+            {
+                if (_settings.Language == value) return;
+                _settings.Language = value;
+                SaveState();
+                OnPropertyChanged(nameof(Language));
+            }
+        }
+
         private void LoadState()
         {
             _settings = _settingsService.Load();

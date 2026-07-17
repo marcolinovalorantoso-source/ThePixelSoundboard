@@ -1,7 +1,8 @@
 <Window x:Class="SoundBoard.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Impostazioni" Width="750" MinWidth="600" SizeToContent="Height"
+        xmlns:services="clr-namespace:SoundBoard.Services"
+        Title="{Binding SettingsTitle, Source={x:Static services:L10n.Instance}}" Width="750" MinWidth="600" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
         Background="#1B1D23" Icon="/settings_icon.ico">
     <Window.Resources>
@@ -103,27 +104,36 @@
 
         <StackPanel Margin="20">
 
+        <!-- Lingua (Language Selection) -->
+        <StackPanel Margin="0,0,0,20">
+            <TextBlock Text="{Binding LanguageLabel, Source={x:Static services:L10n.Instance}}" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
+            <ComboBox x:Name="LanguageComboBox" SelectionChanged="LanguageComboBox_SelectionChanged">
+                <ComboBoxItem x:Name="LanguageItItem" Content="Italiano (IT)" Tag="it"/>
+                <ComboBoxItem x:Name="LanguageEnItem" Content="English (EN)" Tag="en"/>
+            </ComboBox>
+        </StackPanel>
+
         <!-- Output Amici (sempre visibile) -->
         <StackPanel x:Name="FriendsOutputPanel">
-            <TextBlock Text="📁  Dispositivo output (Amici / Discord)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
+            <TextBlock Text="{Binding OutputDeviceFriends, Source={x:Static services:L10n.Instance}}" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
             <ComboBox x:Name="OutputFriendsComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,20"
                        SelectionChanged="OutputFriendsComboBox_SelectionChanged"/>
         </StackPanel>
 
         <!-- Output Cuffie (sempre visibile) -->
-        <TextBlock Text="🎧  Output (Tue cuffie / Speaker)" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
+        <TextBlock Text="{Binding OutputDeviceMe, Source={x:Static services:L10n.Instance}}" Foreground="#F1F2F6" Margin="0,0,0,6" FontWeight="Bold"/>
         <ComboBox x:Name="OutputMeComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,20"
                   SelectionChanged="OutputMeComboBox_SelectionChanged"/>
 
         <CheckBox x:Name="StartWithWindowsCheckBox"
-                  Content="Avvia SoundBoard con Windows"
+                  Content="{Binding StartWithWindows, Source={x:Static services:L10n.Instance}}"
                   Margin="0,0,0,10"
                   Checked="StartWithWindowsCheckBox_Changed"
                   Unchecked="StartWithWindowsCheckBox_Changed"
                   Foreground="#F1F2F6"/>
 
         <CheckBox x:Name="NormalizeAudioCheckBox"
-                  Content="Normalizza volume audio delle clip (evita suoni troppo alti o bassi)"
+                  Content="{Binding NormalizeAudioVolume, Source={x:Static services:L10n.Instance}}"
                   Margin="0,0,0,10"
                   Checked="NormalizeAudioCheckBox_Changed"
                   Unchecked="NormalizeAudioCheckBox_Changed"
@@ -132,7 +142,7 @@
         <!-- Slider per decibel di normalizzazione -->
         <StackPanel x:Name="NormalizationPanel" Margin="20,0,0,20">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                <TextBlock Text="Volume target normalizzazione:" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding NormalizationTargetVolume, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold"/>
                 <TextBlock x:Name="NormalizeDbValueText" Text="-1.0 dB" Foreground="#5BE56B" FontSize="11" FontWeight="Bold" Margin="8,0,0,0"/>
             </StackPanel>
             <Slider x:Name="NormalizeDbSlider" Minimum="-50" Maximum="0" TickFrequency="1" IsSnapToTickEnabled="True"
@@ -141,9 +151,9 @@
 
         <!-- Hotkey Globale Ferma Tutto -->
         <StackPanel Margin="0,0,0,16">
-            <TextBlock Text="Scorciatoia Globale per Fermare i Suoni:" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock Text="{Binding GlobalStopHotkey, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
             <StackPanel Orientation="Horizontal">
-                <Button Content="⌨️ Assegna Hotkey" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
+                <Button Content="{Binding AssignHotkeyMenu, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
                         Padding="12,6" Click="AssignStopAllHotkey_Click"/>
                 <TextBlock x:Name="StopAllHotkeyTextBlock" Text="Nessuna" Foreground="#5BE56B" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="Bold"/>
             </StackPanel>
@@ -151,32 +161,32 @@
 
         <!-- Hotkey Globale Pausa Tutto -->
         <StackPanel Margin="0,0,0,16">
-            <TextBlock Text="Scorciatoia Globale per Pausa Suoni:" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock Text="{Binding GlobalPauseHotkey, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,6"/>
             <StackPanel Orientation="Horizontal">
-                <Button Content="⏸ Assegna Pausa" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
+                <Button Content="{Binding AssignPauseMenu, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
                         Padding="12,6" Click="AssignPauseAllHotkey_Click"/>
                 <TextBlock x:Name="PauseAllHotkeyTextBlock" Text="Nessuna" Foreground="#5BE56B" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="Bold"/>
             </StackPanel>
         </StackPanel>
 
-        <TextBlock Text="Le impostazioni vengono salvate automaticamente."
+        <TextBlock Text="{Binding SettingsAutoSaved, Source={x:Static services:L10n.Instance}}"
                    Foreground="#F1F2F6" FontStyle="Italic" Margin="0,0,0,10"/>
 
-        <Button Content="📁 Apri Cartella Dati e Impostazioni" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
+        <Button Content="{Binding OpenDataFolder, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Background="#2A2E3A" Foreground="#F1F2F6"
                 HorizontalAlignment="Left" Padding="12,6" Margin="0,0,0,16" Click="OpenDataFolder_Click"/>
 
         <!-- Versione -->
         <Border Background="#2A2E3A" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="ThePixelSoundboard" FontSize="14" FontWeight="Bold" Foreground="#F1F2F6"/>
-                <TextBlock Text="Versione 3.0.0 — Nato per ThePixelBoys, libero per tutti" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding VersionInfo, Source={x:Static services:L10n.Instance}}" Foreground="#9AA0AE" FontSize="11" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
         <Grid>
-            <Button Content="⚙️ Ripeti Configurazione Iniziale" Style="{StaticResource FlatButton}" Background="#3498DB" Foreground="White"
+            <Button Content="{Binding RepeatInitialSetup, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Background="#3498DB" Foreground="White"
                     HorizontalAlignment="Left" Padding="12,6" Click="ResetOnboarding_Click"/>
-            <Button Content="Chiudi" Width="100" HorizontalAlignment="Right" Click="Close_Click"/>
+            <Button Content="{Binding Close, Source={x:Static services:L10n.Instance}}" Width="100" HorizontalAlignment="Right" Click="Close_Click"/>
         </Grid>
     </StackPanel>
     </Grid>

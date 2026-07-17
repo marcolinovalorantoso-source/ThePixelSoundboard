@@ -66,16 +66,25 @@ namespace SoundBoard.Views
                 NormalizeDbValueText.Text = $"{_viewModel.NormalizeLoudnessDb:F1} dB";
                 NormalizationPanel.IsEnabled = _viewModel.NormalizeAudio;
 
+                if (_viewModel.Language == "it")
+                {
+                    LanguageComboBox.SelectedItem = LanguageItItem;
+                }
+                else
+                {
+                    LanguageComboBox.SelectedItem = LanguageEnItem;
+                }
+
                 OutputFriendsComboBox.IsEnabled = false;
                 OutputMeComboBox.IsEnabled = false;
 
                 var loadingDevices = new System.Collections.Generic.List<AudioOutputDevice>
                 {
-                    new AudioOutputDevice("", "Caricamento in corso...")
+                    new AudioOutputDevice("", L10n.Instance.LoadingInProgress)
                 };
                 var loadingInputDevices = new System.Collections.Generic.List<AudioInputDevice>
                 {
-                    new AudioInputDevice("", "Caricamento in corso...")
+                    new AudioInputDevice("", L10n.Instance.LoadingInProgress)
                 };
                 OutputFriendsComboBox.ItemsSource = loadingDevices;
                 OutputFriendsComboBox.SelectedIndex = 0;
@@ -121,8 +130,8 @@ namespace SoundBoard.Views
                                     _viewModel.SelectedOutputMeDeviceId = ((AudioOutputDevice)OutputMeComboBox.SelectedItem).Id;
                                 }
 
-                                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.StopAllHotkeyGesture) ? "Nessuna" : _viewModel.StopAllHotkeyGesture;
-                                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.PauseAllHotkeyGesture) ? "Nessuna" : _viewModel.PauseAllHotkeyGesture;
+                                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.StopAllHotkeyGesture) ? L10n.Instance.NoCombination : _viewModel.StopAllHotkeyGesture;
+                                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.PauseAllHotkeyGesture) ? L10n.Instance.NoCombination : _viewModel.PauseAllHotkeyGesture;
 
                                 OutputFriendsComboBox.IsEnabled = true;
                                 OutputMeComboBox.IsEnabled = true;
@@ -166,6 +175,19 @@ namespace SoundBoard.Views
                 _viewModel.SelectedOutputMeDeviceId = device.Id;
         }
 
+        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+            if (LanguageComboBox.SelectedItem is ComboBoxItem item && item.Tag is string lang)
+            {
+                _viewModel.Language = lang;
+                L10n.Instance.CurrentLanguage = lang;
+                
+                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.StopAllHotkeyGesture) ? L10n.Instance.NoCombination : _viewModel.StopAllHotkeyGesture;
+                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(_viewModel.PauseAllHotkeyGesture) ? L10n.Instance.NoCombination : _viewModel.PauseAllHotkeyGesture;
+            }
+        }
+
         private void StartWithWindowsCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             _viewModel.StartWithWindows = StartWithWindowsCheckBox.IsChecked ?? false;
@@ -193,7 +215,7 @@ namespace SoundBoard.Views
             if (dialog.ShowDialog() == true)
             {
                 _viewModel.StopAllHotkeyGesture = dialog.ResultGesture;
-                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? "Nessuna" : dialog.ResultGesture;
+                StopAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? L10n.Instance.NoCombination : dialog.ResultGesture;
             }
         }
 
@@ -203,7 +225,7 @@ namespace SoundBoard.Views
             if (dialog.ShowDialog() == true)
             {
                 _viewModel.PauseAllHotkeyGesture = dialog.ResultGesture;
-                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? "Nessuna" : dialog.ResultGesture;
+                PauseAllHotkeyTextBlock.Text = string.IsNullOrEmpty(dialog.ResultGesture) ? L10n.Instance.NoCombination : dialog.ResultGesture;
             }
         }
 
@@ -234,7 +256,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Impossibile aprire la cartella dati:\n{ex.Message}", "SoundBoard",
+                MessageBox.Show(L10n.Instance.OpenFolderErrorPrefix + ex.Message, L10n.Instance.AppTitle,
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

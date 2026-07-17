@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Threading;
 using SoundBoard.ViewModels;
 using NAudio.Wave;
+using SoundBoard.Services;
 
 namespace SoundBoard.Views
 {
@@ -57,13 +58,13 @@ namespace SoundBoard.Views
                 }
                 else
                 {
-                    StatusText.Text = "Nessun microfono rilevato!";
+                    StatusText.Text = L10n.Instance.NoMicDetected;
                     RecordButton.IsEnabled = false;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Errore caricamento microfoni: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.MicLoadError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -113,7 +114,7 @@ namespace SoundBoard.Views
                     {
                         PreviewButton.IsEnabled = true;
                         SaveButton.IsEnabled = true;
-                        StatusText.Text = "Registrazione completata!";
+                        StatusText.Text = L10n.Instance.RecordingComplete;
                     });
                 };
 
@@ -124,8 +125,8 @@ namespace SoundBoard.Views
                 _isRecording = true;
                 _recordedSeconds = 0;
                 RecordingProgress.Value = 0;
-                RecordButton.Content = "⏹️ STOP";
-                StatusText.Text = "Registrazione in corso...";
+                RecordButton.Content = L10n.Instance.StopRecordingBtn;
+                StatusText.Text = L10n.Instance.RecordingInProgress;
                 PreviewButton.IsEnabled = false;
                 SaveButton.IsEnabled = false;
 
@@ -135,7 +136,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Impossibile avviare la registrazione: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.RecordingStartError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -150,7 +151,7 @@ namespace SoundBoard.Views
             }
             else
             {
-                StatusText.Text = $"Registrazione in corso... {_recordedSeconds:F1}s";
+                StatusText.Text = string.Format(L10n.Instance.RecordingInProgressSec, _recordedSeconds.ToString("F1"));
             }
         }
 
@@ -164,8 +165,8 @@ namespace SoundBoard.Views
             _waveSource?.StopRecording();
             _isRecording = false;
 
-            RecordButton.Content = "🔴 REGISTRA (Max 5s)";
-            StatusText.Text = "Elaborazione audio...";
+            RecordButton.Content = L10n.Instance.RecordMax5s;
+            StatusText.Text = L10n.Instance.ProcessingAudio;
         }
 
         private void PreviewButton_Click(object sender, RoutedEventArgs e)
@@ -197,12 +198,12 @@ namespace SoundBoard.Views
 
                 // Importa nella SoundBoard
                 _viewModel.ImportFile(destPath);
-                MessageBox.Show("Registrazione salvata con successo nella SoundBoard!", "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(L10n.Instance.RecordingSavedSuccess, L10n.Instance.Success, MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Errore durante il salvataggio: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.SaveError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

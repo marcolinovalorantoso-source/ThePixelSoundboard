@@ -1,7 +1,8 @@
 <Window x:Class="SoundBoard.Views.MyInstantsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="🌐 Suoni Online (Downloader)" Width="900" Height="620"
+        xmlns:services="clr-namespace:SoundBoard.Services"
+        Title="{Binding OnlineSoundsTitle, Source={x:Static services:L10n.Instance}}" Width="900" Height="620"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
         Background="#1B1D23" Icon="/settings_icon.ico">
     
@@ -101,7 +102,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="CATEGORIE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="16,16,16,8"/>
+                <TextBlock Grid.Row="0" Text="{Binding CategoriesHeader, Source={x:Static services:L10n.Instance}}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="16,16,16,8"/>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="CategoriesStack" Margin="8,0">
@@ -131,12 +132,12 @@
                          Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource TextPrimaryBrush}" 
                          BorderBrush="#3A3F4E" BorderThickness="1" KeyDown="SearchTextBox_KeyDown"/>
                 
-                <Button Grid.Column="1" Content="📁 Apri Cartella Download" Style="{StaticResource FlatButton}" 
+                <Button Grid.Column="1" Content="{Binding OpenDownloadsFolder, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" 
                         Background="#2A2E3A" Foreground="#F1F2F6" Padding="12,6" Margin="8,0,0,0" Click="OpenDownloadFolder_Click"
-                        ToolTip="Apre la cartella locale dove vengono salvati temporaneamente i suoni scaricati."/>
+                        ToolTip="{Binding OpenDownloadsFolderToolTip, Source={x:Static services:L10n.Instance}}"/>
                 
                 <!-- Placeholder Text (Cerca...) -->
-                <TextBlock IsHitTestVisible="False" Text="🔍 Cerca un suono online..." VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14">
+                <TextBlock IsHitTestVisible="False" Text="{Binding SearchOnlinePlaceholder, Source={x:Static services:L10n.Instance}}" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -149,7 +150,7 @@
                     </TextBlock.Style>
                 </TextBlock>
 
-                <Button Grid.Column="1" Content="Cerca" Padding="16,6" Margin="10,0,0,0" Click="SearchButton_Click"/>
+                <Button Grid.Column="1" Content="{Binding SearchBtn, Source={x:Static services:L10n.Instance}}" Padding="16,6" Margin="10,0,0,0" Click="SearchButton_Click"/>
             </Grid>
 
             <!-- Griglia dei suoni -->
@@ -181,14 +182,14 @@
                                         <!-- Bottone Instant -->
                                         <Button Grid.Row="1" Style="{StaticResource InstantButtonStyle}" Margin="0,10"
                                                 Background="{Binding ColorBrush}" Click="PreviewButton_Click"
-                                                ToolTip="Ascolta anteprima">
+                                                ToolTip="{Binding ListenToPreview, Source={x:Static services:L10n.Instance}}">
                                             <TextBlock Text="{Binding PlayIcon}" Foreground="White" FontSize="16" FontWeight="Bold" Margin="4,0,0,0"/>
                                         </Button>
 
                                         <!-- Pulsante Importa -->
-                                        <Button Grid.Row="2" Style="{StaticResource FlatButton}" Content="⬇️ Importa" 
+                                        <Button Grid.Row="2" Style="{StaticResource FlatButton}" Content="{Binding ImportBtn, Source={x:Static services:L10n.Instance}}" 
                                                 Padding="8,4" FontSize="10" HorizontalAlignment="Stretch"
-                                                Click="ImportButton_Click" ToolTip="Scarica e aggiungi alla SoundBoard"/>
+                                                Click="ImportButton_Click" ToolTip="{Binding ImportToolTip, Source={x:Static services:L10n.Instance}}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -199,7 +200,7 @@
                     <ProgressBar x:Name="BottomLoadingProgress" IsIndeterminate="True" Height="4" Margin="0,20,0,10" Visibility="Collapsed"/>
                     
                     <!-- Bottone Carica Altri -->
-                    <Button x:Name="LoadMoreButton" Content="Carica altri suoni" Margin="0,15,0,25" HorizontalAlignment="Center" Width="200" Click="LoadMoreButton_Click" Visibility="Collapsed"/>
+                    <Button x:Name="LoadMoreButton" Content="{Binding LoadMoreSounds, Source={x:Static services:L10n.Instance}}" Margin="0,15,0,25" HorizontalAlignment="Center" Width="200" Click="LoadMoreButton_Click" Visibility="Collapsed"/>
                 </StackPanel>
             </ScrollViewer>
 
@@ -207,12 +208,12 @@
             <Grid Grid.Row="1" x:Name="LoadingOverlay" Background="#901B1D23" Visibility="Collapsed">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <ProgressBar IsIndeterminate="True" Width="200" Height="6" Margin="0,0,0,10"/>
-                    <TextBlock Text="Ricerca in corso online..." Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding SearchingOnline, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>
 
             <!-- Nessun risultato trovato -->
-            <TextBlock Grid.Row="1" x:Name="NoResultsTextBlock" Text="Nessun suono trovato." Foreground="{StaticResource TextSecondaryBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+            <TextBlock Grid.Row="1" x:Name="NoResultsTextBlock" Text="{Binding NoSoundsFound, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
 
             <!-- StatusTextBlock nascosto per compatibilità compilazione codice-dietro -->
             <TextBlock x:Name="StatusTextBlock" Visibility="Collapsed"/>
@@ -227,7 +228,7 @@
                     </Grid.ColumnDefinitions>
                     
                     <!-- Pulsante Ferma (Sinistra) -->
-                    <Button Grid.Column="0" Content="🛑 Ferma Anteprima" Click="StopButton_Click" Padding="8,4" FontSize="11" 
+                    <Button Grid.Column="0" Content="{Binding StopPreviewBtn, Source={x:Static services:L10n.Instance}}" Click="StopButton_Click" Padding="8,4" FontSize="11" 
                             Background="#E74C3C" Foreground="White" BorderThickness="0" Cursor="Hand">
                         <Button.Resources>
                             <Style TargetType="Border">
@@ -238,9 +239,9 @@
                     
                     <!-- Controlli Riproduzione (Centro) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="🔊 Volume:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
+                        <TextBlock Text="{Binding VolumeLabel, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
                         <Slider Width="120" Minimum="0" Maximum="1" Value="{Binding PreviewVolume, Mode=TwoWay}" VerticalAlignment="Center"
-                                ToolTip="Regola il volume dell'anteprima"/>
+                                ToolTip="{Binding VolumeToolTip, Source={x:Static services:L10n.Instance}}"/>
                     </StackPanel>
                     
                     <!-- Cartella Importazione (Destra) -->

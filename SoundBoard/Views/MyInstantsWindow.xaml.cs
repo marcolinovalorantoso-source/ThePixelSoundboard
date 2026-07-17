@@ -38,6 +38,24 @@ namespace SoundBoard.Views
             { "Politica", "politics" }
         };
 
+        private string GetLocalizedCategoryName(string tag)
+        {
+            return tag switch
+            {
+                "" => L10n.Instance.TutteLeCategorie,
+                "memes" => L10n.Instance.CatMeme,
+                "games" => L10n.Instance.CatGiochi,
+                "music" => L10n.Instance.CatMusica,
+                "sound-effects" => L10n.Instance.CatEffettiSonori,
+                "movies" => L10n.Instance.CatFilm,
+                "anime%20&%20manga" => L10n.Instance.CatAnime,
+                "television" => L10n.Instance.CatTelevisione,
+                "sports" => L10n.Instance.CatSport,
+                "politics" => L10n.Instance.CatPolitica,
+                _ => tag
+            };
+        }
+
         public MyInstantsWindow(MainViewModel viewModel)
         {
             InitializeComponent();
@@ -48,11 +66,23 @@ namespace SoundBoard.Views
             SoundsItemsControl.ItemsSource = _items;
             
             // Imposta cartella selezionata nella barra di stato
-            SelectedFolderTextBlock.Text = "Importa in: " + (_viewModel.SelectedFolder?.Name ?? "Tutti i suoni");
+            SelectedFolderTextBlock.Text = string.Format(L10n.Instance.ImportIntoFolder, _viewModel.SelectedFolder?.Name ?? L10n.Instance.AllSounds);
 
             _viewModel.PreviewEnded += ViewModel_PreviewEnded;
             this.Closing += Window_Closing;
             this.Closed += MyInstantsWindow_Closed;
+
+            L10n.Instance.PropertyChanged += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(L10n.CurrentLanguage))
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        InitializeCategories();
+                        SelectedFolderTextBlock.Text = string.Format(L10n.Instance.ImportIntoFolder, _viewModel.SelectedFolder?.Name ?? L10n.Instance.AllSounds);
+                    });
+                }
+            };
 
             InitializeCategories();
             _ = PerformSearchAsync(reset: true);
@@ -66,7 +96,7 @@ namespace SoundBoard.Views
                 _currentlyPlayingItem.IsPlaying = false;
                 _currentlyPlayingItem = null;
             }
-            StatusTextBlock.Text = "Pronto";
+            StatusTextBlock.Text = L10n.Instance.Ready;
         }
 
         private bool _isClosingAnimationCompleted = false;
@@ -75,35 +105,35 @@ namespace SoundBoard.Views
             if (!_isClosingAnimationCompleted)
             {
                 e.Cancel = true; // Annulla chiusura immediata
-
+ 
                 var grid = MainGrid;
                 var transform = WindowTransform;
-
+ 
                 // Disattiva preview prima di uscire
                 _viewModel.StopPreview();
-
+ 
                 var sb = new System.Windows.Media.Animation.Storyboard();
-
+ 
                 var fadeAnim = new System.Windows.Media.Animation.DoubleAnimation(1.0, 0.0, new Duration(System.TimeSpan.FromSeconds(0.18)));
                 System.Windows.Media.Animation.Storyboard.SetTarget(fadeAnim, grid);
                 System.Windows.Media.Animation.Storyboard.SetTargetProperty(fadeAnim, new PropertyPath(Grid.OpacityProperty));
                 sb.Children.Add(fadeAnim);
-
+ 
                 var slideAnim = new System.Windows.Media.Animation.DoubleAnimation(0, 30, new Duration(System.TimeSpan.FromSeconds(0.22)));
                 System.Windows.Media.Animation.Storyboard.SetTarget(slideAnim, transform);
                 System.Windows.Media.Animation.Storyboard.SetTargetProperty(slideAnim, new PropertyPath(TranslateTransform.YProperty));
                 sb.Children.Add(slideAnim);
-
+ 
                 sb.Completed += (s, ev) =>
                 {
                     _isClosingAnimationCompleted = true;
                     Close(); // Chiude definitivamente
                 };
-
+ 
                 sb.Begin();
             }
         }
-
+ 
         private void ViewModel_PreviewEnded()
         {
             if (_currentlyPlayingItem != null)
@@ -111,22 +141,23 @@ namespace SoundBoard.Views
                 _currentlyPlayingItem.IsPlaying = false;
                 _currentlyPlayingItem = null;
             }
-            StatusTextBlock.Text = "Pronto";
+            StatusTextBlock.Text = L10n.Instance.Ready;
         }
-
+ 
         private void MyInstantsWindow_Closed(object? sender, EventArgs e)
         {
             _viewModel.PreviewEnded -= ViewModel_PreviewEnded;
             _viewModel.StopPreview();
         }
-
+ 
         private void InitializeCategories()
         {
+            CategoriesStack.Children.Clear();
             foreach (var cat in Categories)
             {
                 var btn = new Button
                 {
-                    Content = cat.Key,
+                    Content = GetLocalizedCategoryName(cat.Value),
                     Tag = cat.Value,
                     HorizontalContentAlignment = HorizontalAlignment.Left,
                     Background = Brushes.Transparent,
@@ -136,13 +167,13 @@ namespace SoundBoard.Views
                     Foreground = (Brush)FindResource("TextSecondaryBrush"),
                     Cursor = Cursors.Hand
                 };
-
+ 
                 btn.Click += CategoryButton_Click;
                 CategoriesStack.Children.Add(btn);
             }
-            HighlightActiveCategory("Tutte le categorie");
+            HighlightActiveCategory(GetLocalizedCategoryName(_currentCategory));
         }
-
+ 
         private void CategoryButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn)
@@ -152,7 +183,7 @@ namespace SoundBoard.Views
                 _ = PerformSearchAsync(reset: true);
             }
         }
-
+ 
         private void HighlightActiveCategory(string categoryName)
         {
             foreach (var child in CategoriesStack.Children)
@@ -194,7 +225,7 @@ namespace SoundBoard.Views
                 BottomLoadingProgress.Visibility = Visibility.Visible;
             }
 
-            StatusTextBlock.Text = "Ricerca in corso...";
+            StatusTextBlock.Text = L10n.Instance.SearchingInProgress;
 
             try
             {
@@ -220,17 +251,17 @@ namespace SoundBoard.Views
 
                     NoResultsTextBlock.Visibility = _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
                     LoadMoreButton.Visibility = !string.IsNullOrEmpty(_nextPageUrl) ? Visibility.Visible : Visibility.Collapsed;
-                    StatusTextBlock.Text = $"Trovati {_items.Count} suoni";
+                    StatusTextBlock.Text = string.Format(L10n.Instance.FoundSoundsCount, _items.Count);
                 }
                 else
                 {
-                    StatusTextBlock.Text = "Errore durante la ricerca.";
+                    StatusTextBlock.Text = L10n.Instance.SearchError;
                     if (reset) NoResultsTextBlock.Visibility = Visibility.Visible;
                 }
             }
             catch (Exception ex)
             {
-                StatusTextBlock.Text = "Errore: " + ex.Message;
+                StatusTextBlock.Text = L10n.Instance.SearchErrorPrefix + ex.Message;
             }
             finally
             {
@@ -282,7 +313,7 @@ namespace SoundBoard.Views
                     _viewModel.StopPreview();
                     item.IsPlaying = false;
                     _currentlyPlayingItem = null;
-                    StatusTextBlock.Text = "Pronto";
+                    StatusTextBlock.Text = L10n.Instance.Ready;
                     return;
                 }
 
@@ -295,7 +326,7 @@ namespace SoundBoard.Views
 
                 _currentlyPlayingItem = item;
                 item.IsPlaying = true;
-                StatusTextBlock.Text = $"Caricamento anteprima: {item.Name}...";
+                StatusTextBlock.Text = string.Format(L10n.Instance.LoadingPreviewName, item.Name);
 
                 try
                 {
@@ -306,23 +337,23 @@ namespace SoundBoard.Views
 
                     if (localPath != null && File.Exists(localPath))
                     {
-                        StatusTextBlock.Text = $"Riproduzione anteprima: {item.Name}...";
+                        StatusTextBlock.Text = string.Format(L10n.Instance.PlayingPreviewName, item.Name);
                         _viewModel.PlayPreview(localPath);
                     }
                     else
                     {
-                        MessageBox.Show("Impossibile scaricare l'anteprima audio.", "Errore", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(L10n.Instance.UnableToDownloadPreview, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Warning);
                         item.IsPlaying = false;
                         _currentlyPlayingItem = null;
-                        StatusTextBlock.Text = "Pronto";
+                        StatusTextBlock.Text = L10n.Instance.Ready;
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Errore di riproduzione: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(L10n.Instance.PlaybackErrorPrefix + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                     item.IsPlaying = false;
                     _currentlyPlayingItem = null;
-                    StatusTextBlock.Text = "Pronto";
+                    StatusTextBlock.Text = L10n.Instance.Ready;
                 }
             }
         }
@@ -334,7 +365,7 @@ namespace SoundBoard.Views
                 btn.IsEnabled = false;
                 var originalContent = btn.Content;
                 btn.Content = "⌛...";
-                StatusTextBlock.Text = $"Download di {item.Name}...";
+                StatusTextBlock.Text = string.Format(L10n.Instance.DownloadingSoundName, item.Name);
 
                 try
                 {
@@ -349,27 +380,27 @@ namespace SoundBoard.Views
                         // Importa nella SoundBoard usando la cartella attualmente selezionata
                         _viewModel.ImportFile(localPath);
                         
-                        btn.Content = "✔️ Importato";
+                        btn.Content = L10n.Instance.ImportedCheck;
                         btn.Background = (Brush)FindResource("SuccessBrush");
-                        StatusTextBlock.Text = $"Importato con successo: {item.Name}";
+                        StatusTextBlock.Text = string.Format(L10n.Instance.ImportedSuccessfullyName, item.Name);
                     }
                     else
                     {
-                        MessageBox.Show("Download fallito. Verifica la connessione.", "Errore", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(L10n.Instance.DownloadFailedCheckConnection, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Warning);
                         btn.Content = originalContent;
                         btn.IsEnabled = true;
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Errore durante l'importazione: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(L10n.Instance.ImportErrorPrefix + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                     btn.Content = originalContent;
                     btn.IsEnabled = true;
                 }
                 finally
                 {
                     await Task.Delay(2000);
-                    if (btn.Content.ToString() == "✔️ Importato")
+                    if (btn.Content.ToString() == L10n.Instance.ImportedCheck)
                     {
                         btn.Content = originalContent;
                         btn.ClearValue(Button.BackgroundProperty);
@@ -390,7 +421,7 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Impossibile aprire la cartella: " + ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.OpenFolderErrorPrefix + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

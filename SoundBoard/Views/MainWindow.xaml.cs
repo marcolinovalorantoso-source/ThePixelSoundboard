@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using SoundBoard.Models;
 using SoundBoard.ViewModels;
+using SoundBoard.Services;
 
 namespace SoundBoard.Views
 {
@@ -20,6 +21,7 @@ namespace SoundBoard.Views
             try
             {
                 _viewModel = new MainViewModel();
+                SoundBoard.Services.L10n.Instance.CurrentLanguage = _viewModel.Language;
             }
             catch (Exception ex)
             {
@@ -141,7 +143,7 @@ namespace SoundBoard.Views
                 }
                 else
                 {
-                    MessageBox.Show("Il file audio non è stato trovato sul disco.", "File non trovato", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(L10n.Instance.FileMissingOnDiskWarning, L10n.Instance.FileNotFound, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
@@ -156,8 +158,8 @@ namespace SoundBoard.Views
                 bool ok = _viewModel.AssignHotkey(vm, dialog.ResultGesture);
                 if (!ok && !string.IsNullOrEmpty(dialog.ResultGesture))
                 {
-                    MessageBox.Show("Combinazione non valida o già in uso da un'altra applicazione.",
-                        "SoundBoard", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(L10n.Instance.InvalidHotkeyOrInUse,
+                        L10n.Instance.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
@@ -397,8 +399,8 @@ namespace SoundBoard.Views
             {
                 _logoClickCount = 0;
                 MessageBox.Show(
-                    "Nato per il server Discord ThePixelBoys e ora libero e Open Source per tutti!",
-                    "ThePixelSoundboard - Easter Egg",
+                    L10n.Instance.EasterEggMsg,
+                    L10n.Instance.EasterEggTitle,
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
@@ -477,8 +479,8 @@ namespace SoundBoard.Views
         private void ClearAllSoundsButton_Click(object sender, RoutedEventArgs e)
         {
             CloseDrawer();
-            var res = MessageBox.Show("Sei sicuro di voler svuotare la soundboard? Questa azione rimuoverà tutti i suoni salvati.",
-                "Svuota Soundboard", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            var res = MessageBox.Show(L10n.Instance.ClearSoundboardConfirm,
+                L10n.Instance.ClearSoundboard, MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (res == MessageBoxResult.Yes)
             {
                 _viewModel.ClearAllSounds();

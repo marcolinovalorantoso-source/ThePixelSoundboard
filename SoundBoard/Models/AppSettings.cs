@@ -52,5 +52,8 @@ namespace SoundBoard.Models
 
         /// <summary>Indica se l'utente ha completato il tutorial/setup iniziale.</summary>
         public bool IsOnboarded { get; set; } = false;
+
+        /// <summary>Lingua dell'applicazione ("it" o "en"). Defaults to "it" if system culture is Italian, otherwise "en".</summary>
+        public string Language { get; set; } = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName.Equals("it", System.StringComparison.OrdinalIgnoreCase) ? "it" : "en";
     }
 }

@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using SoundBoard.ViewModels;
+using SoundBoard.Services;
 
 namespace SoundBoard.Views
 {
@@ -36,8 +37,8 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore nel caricamento dei dispositivi audio:\n{ex.Message}", 
-                    "Setup Audio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(L10n.Instance.AudioDevicesLoadError + ex.Message, 
+                    L10n.Instance.AudioSetupTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
             UpdateStepUI();
@@ -119,8 +120,8 @@ namespace SoundBoard.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Impossibile salvare i dispositivi audio:\n{ex.Message}", 
-                    "Configurazione Audio", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Instance.AudioDevicesSaveError + ex.Message, 
+                    L10n.Instance.AudioConfigTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -150,11 +151,11 @@ namespace SoundBoard.Views
             BackButton.Visibility = _currentStep == 0 ? Visibility.Collapsed : Visibility.Visible;
             if (_isExpert && _currentStep == 1)
             {
-                NextButton.Content = "Completa! 🎉";
+                NextButton.Content = L10n.Instance.Complete;
             }
             else
             {
-                NextButton.Content = _currentStep == 2 ? "Completa! 🎉" : "Avanti";
+                NextButton.Content = _currentStep == 2 ? L10n.Instance.Complete : L10n.Instance.Next;
             }
 
             // Dot indicators

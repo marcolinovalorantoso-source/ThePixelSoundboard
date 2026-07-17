@@ -18,6 +18,8 @@ namespace SoundBoard.Views
             SoundBoard.Services.ThemeService.ApplyDarkTheme(this);
             if (!string.IsNullOrEmpty(currentGesture))
                 GestureText.Text = currentGesture;
+            else
+                GestureText.Text = L10n.Instance.NoCombination;
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)

@@ -1,7 +1,8 @@
 <Window x:Class="SoundBoard.Views.UrlDownloaderWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="🔗 Scarica da URL (YouTube / TikTok)" Width="500" Height="360"
+        xmlns:services="clr-namespace:SoundBoard.Services"
+        Title="{Binding UrlTitle, Source={x:Static services:L10n.Instance}}" Width="500" Height="360"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="#1B1D23" Icon="/settings_icon.ico">
     <Window.Resources>
@@ -25,8 +26,8 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="Scarica Audio da Link" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-            <TextBlock Text="Incolla un link di YouTube, TikTok o altri siti supportati per scaricare l'audio direttamente in MP3." 
+            <TextBlock Text="{Binding UrlHeader, Source={x:Static services:L10n.Instance}}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding UrlDesc, Source={x:Static services:L10n.Instance}}" 
                        TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,4,0,0" LineHeight="15"/>
         </StackPanel>
 
@@ -37,7 +38,7 @@
             </Grid.ColumnDefinitions>
             <TextBox x:Name="UrlTextBox" Height="36" Padding="10,0" VerticalContentAlignment="Center"
                      Background="{StaticResource BgPanelBrush}" BorderBrush="#3A3F4E" BorderThickness="1" Foreground="{StaticResource TextPrimaryBrush}"
-                     Tag="Incolla il link del video qui (es: https://www.youtube.com/watch?v=...)" GotFocus="UrlTextBox_GotFocus" LostFocus="UrlTextBox_LostFocus"/>
+                     GotFocus="UrlTextBox_GotFocus" LostFocus="UrlTextBox_LostFocus"/>
         </Grid>
 
         <!-- Trim Options -->
@@ -47,33 +48,33 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                <TextBlock Text="Taglio Inizio (opzionale):" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
+                <TextBlock Text="{Binding StartCutOptional, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                 <TextBox x:Name="StartTextBox" Height="30" Padding="8,0" VerticalContentAlignment="Center"
                          Background="{StaticResource BgPanelBrush}" BorderBrush="#3A3F4E" BorderThickness="1" Foreground="{StaticResource TextPrimaryBrush}"
-                         Tag="es. 00:10 o 10" GotFocus="StartTextBox_GotFocus" LostFocus="StartTextBox_LostFocus"/>
+                         GotFocus="StartTextBox_GotFocus" LostFocus="StartTextBox_LostFocus"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                <TextBlock Text="Taglio Fine (opzionale):" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
+                <TextBlock Text="{Binding EndCutOptional, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                 <TextBox x:Name="EndTextBox" Height="30" Padding="8,0" VerticalContentAlignment="Center"
                          Background="{StaticResource BgPanelBrush}" BorderBrush="#3A3F4E" BorderThickness="1" Foreground="{StaticResource TextPrimaryBrush}"
-                         Tag="es. 00:15 o 15" GotFocus="EndTextBox_GotFocus" LostFocus="EndTextBox_LostFocus"/>
+                         GotFocus="EndTextBox_GotFocus" LostFocus="EndTextBox_LostFocus"/>
             </StackPanel>
         </Grid>
 
         <!-- Status & Progress -->
         <Grid Grid.Row="3">
             <StackPanel x:Name="ProgressPanel" Visibility="Collapsed">
-                <TextBlock x:Name="StatusTextBlock" Text="Download in corso..." Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,8"/>
+                <TextBlock x:Name="StatusTextBlock" Text="{Binding Downloading, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,8"/>
                 <ProgressBar x:Name="DownloadProgressBar" Height="6" IsIndeterminate="True" Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource AccentBrush}"/>
             </StackPanel>
-            <TextBlock x:Name="IdleTextBlock" Text="Pronto per il download." Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Top"/>
+            <TextBlock x:Name="IdleTextBlock" Text="{Binding ReadyToDownload, Source={x:Static services:L10n.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Top"/>
         </Grid>
 
         <!-- Actions -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button x:Name="CancelBtn" Content="Annulla" Width="90" Height="34" Margin="0,0,10,0" 
+            <Button x:Name="CancelBtn" Content="{Binding Cancel, Source={x:Static services:L10n.Instance}}" Width="90" Height="34" Margin="0,0,10,0" 
                     Style="{StaticResource FlatButton}" Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource TextPrimaryBrush}" Click="CancelButton_Click"/>
-            <Button x:Name="DownloadBtn" Content="Scarica MP3  📥" Width="130" Height="34" 
+            <Button x:Name="DownloadBtn" Content="{Binding DownloadMp3, Source={x:Static services:L10n.Instance}}" Width="130" Height="34" 
                     Style="{StaticResource FlatButton}" Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="Bold" Click="DownloadButton_Click"/>
         </StackPanel>
     </Grid>
