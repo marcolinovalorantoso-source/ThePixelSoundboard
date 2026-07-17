@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Net.Http;
+using System.Text.Json;
 using SoundBoard.ViewModels;
 
 namespace SoundBoard.Views
@@ -62,6 +64,28 @@ namespace SoundBoard.Views
 
             try
             {
+                // Se è un link TikTok, proviamo prima con TikWM API (molto più robusto per aggirare i login di TikTok)
+                if (url.Contains("tiktok.com"))
+                {
+                    StatusTextBlock.Text = "Connessione a TikTok (TikWM)...";
+                    string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                    string destFolder = Path.Combine(appDataFolder, "Sounds");
+                    Directory.CreateDirectory(destFolder);
+
+                    var (tiktokSuccess, tiktokTitle, tiktokErrorOrPath) = await TryDownloadTikTokAsync(url, destFolder);
+                    if (tiktokSuccess && File.Exists(tiktokErrorOrPath))
+                    {
+                        _viewModel.ImportFile(tiktokErrorOrPath);
+                        MessageBox.Show("Suono scaricato da TikTok ed importato con successo!", "Completato", MessageBoxButton.OK, MessageBoxImage.Information);
+                        Close();
+                        return;
+                    }
+                    else
+                    {
+                        StatusTextBlock.Text = "TikWM non riuscito. Provo a ripiegare su yt-dlp...";
+                    }
+                }
+
                 StatusTextBlock.Text = "Verifica link e caricamento informazioni...";
                 string videoTitle = await Task.Run(() => GetVideoTitle(url));
 
@@ -73,10 +97,10 @@ namespace SoundBoard.Views
                 string sanitizedTitle = SanitizeFileName(videoTitle);
                 
                 // Destination Path
-                string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
-                string destFolder = Path.Combine(appDataFolder, "Sounds");
-                Directory.CreateDirectory(destFolder);
-                string destFilePathWithoutExt = Path.Combine(destFolder, sanitizedTitle);
+                string appDataFolder2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                string destFolder2 = Path.Combine(appDataFolder2, "Sounds");
+                Directory.CreateDirectory(destFolder2);
+                string destFilePathWithoutExt = Path.Combine(destFolder2, sanitizedTitle);
                 string finalMp3Path = destFilePathWithoutExt + ".mp3";
 
                 StatusTextBlock.Text = $"Download in corso: {videoTitle}...";
@@ -168,6 +192,91 @@ namespace SoundBoard.Views
             catch (Exception ex)
             {
                 return (false, ex.Message);
+            }
+        }
+
+        private async Task<(bool Success, string Title, string ErrorLog)> TryDownloadTikTokAsync(string url, string destFolder)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var values = new System.Collections.Generic.Dictionary<string, string>
+                    {
+                        { "url", url }
+                    };
+                    var content = new FormUrlEncodedContent(values);
+                    var response = await client.PostAsync("https://www.tikwm.com/api/", content);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return (false, string.Empty, $"Errore HTTP: {response.StatusCode}");
+                    }
+
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    using (var doc = JsonDocument.Parse(jsonString))
+                    {
+                        var root = doc.RootElement;
+                        if (!root.TryGetProperty("code", out var codeProp))
+                        {
+                            return (false, string.Empty, "Risposta API non valida.");
+                        }
+
+                        int code = codeProp.GetInt32();
+                        if (code != 0)
+                        {
+                            string msg = root.TryGetProperty("msg", out var msgProp) ? msgProp.GetString() ?? "" : "Errore TikWM API";
+                            return (false, string.Empty, msg);
+                        }
+
+                        var data = root.GetProperty("data");
+                        
+                        // Determina titolo
+                        string musicTitle = "TikTok_Audio";
+                        if (data.TryGetProperty("music_info", out var musicInfo))
+                        {
+                            if (musicInfo.TryGetProperty("title", out var titleProp))
+                            {
+                                musicTitle = titleProp.GetString() ?? "TikTok_Audio";
+                            }
+                        }
+
+                        // Trova URL file audio
+                        string downloadUrl = string.Empty;
+                        if (data.TryGetProperty("music", out var musicProp))
+                        {
+                            downloadUrl = musicProp.GetString() ?? string.Empty;
+                        }
+                        else if (data.TryGetProperty("music_info", out var musicInfo2) && musicInfo2.TryGetProperty("play", out var playProp))
+                        {
+                            downloadUrl = playProp.GetString() ?? string.Empty;
+                        }
+
+                        if (string.IsNullOrEmpty(downloadUrl))
+                        {
+                            return (false, string.Empty, "Link audio non trovato nella risposta TikTok.");
+                        }
+
+                        // Scarica e salva
+                        string sanitizedTitle = SanitizeFileName(musicTitle);
+                        string finalMp3Path = Path.Combine(destFolder, sanitizedTitle + ".mp3");
+                        
+                        int count = 1;
+                        while (File.Exists(finalMp3Path))
+                        {
+                            finalMp3Path = Path.Combine(destFolder, $"{sanitizedTitle}_{count}.mp3");
+                            count++;
+                        }
+
+                        var audioBytes = await client.GetByteArrayAsync(downloadUrl);
+                        await File.WriteAllBytesAsync(finalMp3Path, audioBytes);
+
+                        return (true, Path.GetFileNameWithoutExtension(finalMp3Path), finalMp3Path);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, string.Empty, ex.Message);
             }
         }
 
