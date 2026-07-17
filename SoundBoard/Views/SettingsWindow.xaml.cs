@@ -66,14 +66,12 @@ namespace SoundBoard.Views
                 NormalizeDbValueText.Text = $"{_viewModel.NormalizeLoudnessDb:F1} dB";
                 NormalizationPanel.IsEnabled = _viewModel.NormalizeAudio;
 
-                if (_viewModel.Language == "it")
-                {
-                    LanguageComboBox.SelectedItem = LanguageItItem;
-                }
-                else
-                {
-                    LanguageComboBox.SelectedItem = LanguageEnItem;
-                }
+                LanguageComboBox.SelectedItem = _viewModel.Language switch {
+                    "it" => LanguageItItem,
+                    "fr" => LanguageFrItem,
+                    "de" => LanguageDeItem,
+                    _    => LanguageEnItem
+                };
 
                 OutputFriendsComboBox.IsEnabled = false;
                 OutputMeComboBox.IsEnabled = false;

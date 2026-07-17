@@ -110,6 +110,8 @@
             <ComboBox x:Name="LanguageComboBox" SelectionChanged="LanguageComboBox_SelectionChanged">
                 <ComboBoxItem x:Name="LanguageItItem" Content="Italiano (IT)" Tag="it"/>
                 <ComboBoxItem x:Name="LanguageEnItem" Content="English (EN)" Tag="en"/>
+                <ComboBoxItem x:Name="LanguageFrItem" Content="Français (FR)" Tag="fr"/>
+                <ComboBoxItem x:Name="LanguageDeItem" Content="Deutsch (DE)" Tag="de"/>
             </ComboBox>
         </StackPanel>
 

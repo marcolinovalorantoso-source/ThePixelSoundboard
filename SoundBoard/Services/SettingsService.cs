@@ -48,8 +48,13 @@ namespace SoundBoard.Services
             // Su nuova installazione, rileva la lingua del sistema operativo
             if (isNewInstall)
             {
-                var systemLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                settings.Language = systemLang.Equals("it", System.StringComparison.OrdinalIgnoreCase) ? "it" : "en";
+                var systemLang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName.ToLowerInvariant();
+                settings.Language = systemLang switch {
+                    "it" => "it",
+                    "fr" => "fr",
+                    "de" => "de",
+                    _    => "en"
+                };
             }
 
             // Valida i device ID: se puntano a un indice fuori range, azzera per evitare
