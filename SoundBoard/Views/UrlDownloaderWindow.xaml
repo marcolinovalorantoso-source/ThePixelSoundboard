@@ -1,0 +1,59 @@
+<Window x:Class="SoundBoard.Views.UrlDownloaderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🔗 Scarica da URL (YouTube / TikTok)" Width="500" Height="280"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="#1B1D23" Icon="/settings_icon.ico">
+    <Window.Resources>
+        <!-- Custom colors -->
+        <SolidColorBrush x:Key="BgPanelBrush" Color="#232631"/>
+        <SolidColorBrush x:Key="BgElevatedBrush" Color="#2A2E3A"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F1F2F6"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9AA0AE"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#3498DB"/>
+        <SolidColorBrush x:Key="SuccessBrush" Color="#2ECC71"/>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Input URL -->
+            <RowDefinition Height="*"/>    <!-- Status & Progress -->
+            <RowDefinition Height="Auto"/> <!-- Actions -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Scarica Audio da Link" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+            <TextBlock Text="Incolla un link di YouTube, TikTok o altri siti supportati per scaricare l'audio direttamente in MP3." 
+                       TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,4,0,0" LineHeight="15"/>
+        </StackPanel>
+
+        <!-- Input URL -->
+        <Grid Grid.Row="1" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="UrlTextBox" Height="36" Padding="10,0" VerticalContentAlignment="Center"
+                     Background="{StaticResource BgPanelBrush}" BorderBrush="#3A3F4E" BorderThickness="1" Foreground="{StaticResource TextPrimaryBrush}"
+                     Tag="Incolla il link del video qui (es: https://www.youtube.com/watch?v=...)" GotFocus="UrlTextBox_GotFocus" LostFocus="UrlTextBox_LostFocus"/>
+        </Grid>
+
+        <!-- Status & Progress -->
+        <Grid Grid.Row="2">
+            <StackPanel x:Name="ProgressPanel" Visibility="Collapsed">
+                <TextBlock x:Name="StatusTextBlock" Text="Download in corso..." Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,8"/>
+                <ProgressBar x:Name="DownloadProgressBar" Height="6" IsIndeterminate="True" Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource AccentBrush}"/>
+            </StackPanel>
+            <TextBlock x:Name="IdleTextBlock" Text="Pronto per il download." Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Top"/>
+        </Grid>
+
+        <!-- Actions -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="CancelBtn" Content="Annulla" Width="90" Height="34" Margin="0,0,10,0" 
+                    Style="{StaticResource FlatButton}" Background="{StaticResource BgPanelBrush}" Foreground="{StaticResource TextPrimaryBrush}" Click="CancelButton_Click"/>
+            <Button x:Name="DownloadBtn" Content="Scarica MP3  📥" Width="130" Height="34" 
+                    Style="{StaticResource FlatButton}" Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="Bold" Click="DownloadButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -475,5 +475,12 @@ namespace SoundBoard.Views
                 _viewModel.ClearAllSounds();
             }
         }
+
+        private void UrlDownloaderButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseDrawer();
+            var dialog = new UrlDownloaderWindow(_viewModel) { Owner = this };
+            dialog.ShowDialog();
+        }
     }
 }

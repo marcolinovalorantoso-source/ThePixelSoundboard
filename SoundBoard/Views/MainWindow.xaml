@@ -604,6 +604,15 @@
                                 </StackPanel>
                             </StackPanel>
                         </Button>
+                        <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="UrlDownloaderButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔗" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="Scarica da URL" FontWeight="SemiBold" Foreground="#F1F2F6" FontSize="13"/>
+                                    <TextBlock Text="YouTube, TikTok o altri link" Foreground="#9AA0AE" FontSize="10" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
                         <Button Style="{StaticResource DrawerMenuItemStyle}" Margin="0,4,0,0" Click="OpenSoundsFolder_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📁" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
