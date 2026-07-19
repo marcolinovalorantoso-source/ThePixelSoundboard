@@ -54,7 +54,7 @@ namespace SoundBoard.ViewModels
         private Models.SoundButtonModel? _lastDeletedModel;
         private int _lastDeletedIndex;
 
-        private static readonly string[] SupportedExtensions = { ".mp3", ".wav", ".ogg" };
+        private static readonly string[] SupportedExtensions = { ".mp3", ".wav", ".ogg", ".mp4" };
 
         public MainViewModel()
         {
@@ -174,7 +174,7 @@ namespace SoundBoard.ViewModels
             var dialog = new OpenFileDialog
             {
                 Multiselect = true,
-                Filter = "File audio (*.mp3;*.wav;*.ogg)|*.mp3;*.wav;*.ogg|Tutti i file (*.*)|*.*",
+                Filter = "File audio/video (*.mp3;*.wav;*.ogg;*.mp4)|*.mp3;*.wav;*.ogg;*.mp4|Tutti i file (*.*)|*.*",
                 Title = "Importa suoni"
             };
             if (dialog.ShowDialog() == true)
