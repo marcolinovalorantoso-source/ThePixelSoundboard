@@ -210,10 +210,52 @@ namespace SoundBoard.ViewModels
 
             var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
             if (!SupportedExtensions.Contains(ext) || !System.IO.File.Exists(path)) return;
+
+            string finalPath = path;
+            if (ext == ".mp4")
+            {
+                try
+                {
+                    var appDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundBoard");
+                    var destFolder = System.IO.Path.Combine(appDataFolder, "Sounds");
+                    System.IO.Directory.CreateDirectory(destFolder);
+
+                    var wavName = System.IO.Path.GetFileNameWithoutExtension(path) + "_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".wav";
+                    var wavPath = System.IO.Path.Combine(destFolder, wavName);
+
+                    var startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "ffmpeg",
+                        Arguments = $"-y -i \"{path}\" -vn -acodec pcm_s16le -ar 44100 -ac 2 \"{wavPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (var process = System.Diagnostics.Process.Start(startInfo))
+                    {
+                        process?.WaitForExit();
+                    }
+
+                    if (System.IO.File.Exists(wavPath))
+                    {
+                        finalPath = wavPath;
+                    }
+                    else
+                    {
+                        throw new Exception("Estrazione audio tramite ffmpeg non riuscita.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Impossibile estrarre l'audio dal file MP4:\n{ex.Message}", "SoundBoard",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+            }
+
             var model = new SoundButtonModel
             {
                 Name = System.IO.Path.GetFileNameWithoutExtension(path),
-                FilePath = path,
+                FilePath = finalPath,
                 FolderId = SelectedFolder?.Id ?? "root",
                 Color = PickRandomColor()
             };
