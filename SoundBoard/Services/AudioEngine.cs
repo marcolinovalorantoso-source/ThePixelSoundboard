@@ -716,6 +716,11 @@ namespace SoundBoard.Services
         {
             var ext = Path.GetExtension(filePath).ToLowerInvariant();
             
+            if (ext == ".mp4")
+            {
+                return new MediaFoundationReader(filePath);
+            }
+
             FileStream? stream = null;
             int retries = 10;
             for (int i = 0; i < retries; i++)
