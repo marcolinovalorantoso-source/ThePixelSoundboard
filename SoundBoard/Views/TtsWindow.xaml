@@ -136,16 +136,19 @@
         <!-- Actions -->
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Test/Preview locally (only for Me) -->
-            <Button Grid.Column="0" Content="{Binding PlayBtn, Source={x:Static services:L10n.Instance}}" Padding="16,10" Width="130" FontWeight="Bold" Click="Speak_Click"/>
+            <Button Grid.Column="0" Content="{Binding TtsPlayMe, Source={x:Static services:L10n.Instance}}" Padding="10,10" FontWeight="Bold" Click="Speak_Click" Margin="0,0,4,0"/>
             
+            <!-- Play directly to call (Me + Friends) -->
+            <Button Grid.Column="1" Content="{Binding TtsPlayCall, Source={x:Static services:L10n.Instance}}" Padding="10,10" FontWeight="Bold" Click="SpeakToCall_Click" Margin="4,0,4,0"/>
+
             <!-- Save to grid -->
-            <Button Grid.Column="2" Content="{Binding SaveAsButton, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Padding="16,10" Width="160" Click="SaveButton_Click" Background="{StaticResource AccentBrush}"/>
+            <Button Grid.Column="2" Content="{Binding TtsSaveToGrid, Source={x:Static services:L10n.Instance}}" Style="{StaticResource FlatButton}" Padding="10,10" Click="SaveButton_Click" Background="{StaticResource AccentBrush}" Margin="4,0,0,0"/>
         </Grid>
     </Grid>
 </Window>

@@ -227,6 +227,10 @@ namespace SoundBoard.Services
         public string TtsButtonCreatedSuccess => GetString("Tasto TTS creato con successo nella SoundBoard!", "TTS button created successfully in the SoundBoard!", "Bouton TTS créé avec succès dans la SoundBoard!", "TTS-Button erfolgreich in der SoundBoard erstellt!");
         public string TtsSaveError => GetString("Errore durante il salvataggio TTS: ", "Error during TTS save: ", "Erreur lors de la sauvegarde TTS: ", "Fehler beim TTS-Speichern: ");
 
+        public string TtsPlayMe => GetString("Ascolta (solo tu)", "Listen (only you)", "Écouter (seulement toi)", "Anhören (nur du)");
+        public string TtsPlayCall => GetString("Invia in chiamata", "Transmit to call", "Transmettre à l'appel", "In Anruf übertragen");
+        public string TtsSaveToGrid => GetString("Salva come tasto", "Save as button", "Enregistrer comme bouton", "Als Button speichern");
+
         // ================= URL DOWNLOADER WINDOW =================
         public string UrlTitle => GetString("🔗 Scarica da URL (YouTube / TikTok)", "🔗 Download from URL (YouTube / TikTok)", "🔗 Télécharger depuis URL (YouTube / TikTok)", "🔗 Von URL herunterladen (YouTube / TikTok)");
         public string UrlHeader => GetString("Scarica Audio da Link", "Download Audio from Link", "Télécharger l'audio depuis un lien", "Audio von einem Link herunterladen");

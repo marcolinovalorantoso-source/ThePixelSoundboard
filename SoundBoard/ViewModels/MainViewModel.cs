@@ -235,6 +235,19 @@ namespace SoundBoard.ViewModels
             }
         }
 
+        public void PlayTtsToCall(string filePath)
+        {
+            try
+            {
+                _audioEngine.Play("tts_call_direct", filePath, 1.0, NormalizeAudio, NormalizeLoudnessDb);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Impossibile trasmettere in chiamata:\n{ex.Message}", "SoundBoard",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         public void StopPreview()
         {
             try

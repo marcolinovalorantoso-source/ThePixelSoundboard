@@ -225,6 +225,33 @@ namespace SoundBoard.Views
             }
         }
 
+        private async void SpeakToCall_Click(object sender, RoutedEventArgs e)
+        {
+            var text = TtsTextBox.Text.Trim();
+            if (string.IsNullOrEmpty(text) || _placeholderActive)
+            {
+                MessageBox.Show(L10n.Instance.TtsWriteTextFirst, L10n.Instance.AppTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                if (VoiceComboBox.SelectedItem is TtsVoiceItem voice)
+                {
+                    var rate = (int)RateSlider.Value;
+                    var path = await GenerateTtsFileAsync(text, rate, voice);
+                    if (File.Exists(path))
+                    {
+                        _viewModel.PlayTtsToCall(path);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(L10n.Instance.TtsError + ex.Message, L10n.Instance.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             var text = TtsTextBox.Text.Trim();
@@ -257,7 +284,6 @@ namespace SoundBoard.Views
 
                         // Importa il file generato come un nuovo tasto nella Soundboard
                         _viewModel.ImportFile(destPath);
-                        MessageBox.Show(L10n.Instance.TtsButtonCreatedSuccess, L10n.Instance.Success, MessageBoxButton.OK, MessageBoxImage.Information);
                         this.Close();
                     }
                 }
